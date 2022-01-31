@@ -18,7 +18,7 @@ Pull requests are welcome!
 
 In order to contribute to this website, you should have local development setup:
 
-[Ubuntu](./local-development-with-ubuntu)
+[Instructions for setup on Ubuntu](./local-development-with-ubuntu)
 
 
 
