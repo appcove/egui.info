@@ -1,1 +1,7 @@
+#vim:fileencoding=utf-8:ts=2:sw=2:sts=2:expandtab
+
 theme: jekyll-theme-hacker
+
+
+title: egui.info
+description: "Unofficial notes about the excellent egui crate"
