@@ -1,37 +1,14 @@
-## Welcome to GitHub Pages
+## egui.info: Unofficial notes about the excellent `egui` library
 
-You can use the [editor on GitHub](https://github.com/appcove/egui.info/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+> `egui` is a simple, fast, and highly portable immediate mode GUI library for Rust. egui runs on the web, natively, and in your favorite game engine (or will soon).  `egui` aims to be the easiest-to-use Rust GUI library, and the simplest way to make a web app in Rust.  `egui` can be used anywhere you can draw textured triangles, which means you can easily integrate it into your game engine of choice.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+Official `egui` git repository: https://github.com/emilk/egui
 
-### Markdown
+Official `egui` demo: https://www.egui.rs/#demo
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+Official `egui` docs on docs.rs: https://docs.rs/egui/latest/egui/
 
-```markdown
-Syntax highlighted code block
+------
 
-# Header 1
-## Header 2
-### Header 3
+The purpose of this site is to help guide newcomers to [Rust](https://www.rust-lang.org/) and [egui](https://github.com/emilk/egui) to be able to quickly get up to speed.  
 
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/appcove/egui.info/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
