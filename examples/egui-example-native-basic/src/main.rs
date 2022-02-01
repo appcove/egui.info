@@ -22,7 +22,7 @@ impl Default for ExampleApp {
 
 impl epi::App for ExampleApp {
     fn name(&self) -> &str {
-        "Tang 7"
+        "egui native basic"
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {

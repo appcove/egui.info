@@ -1,6 +1,4 @@
----
-title: "egui.info: Unofficial notes about the excellent egui library"
----
+# Unofficial notes about the excellent egui library
 
 What is **egui**?
 

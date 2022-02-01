@@ -1,7 +1,4 @@
----
-title: Setup
-
----
+# Setup
 
 This page contains information on how to get setup to develop in egui. The best way to learn egui and Rust is to use working examples. You are going to need to install Rust. We recommend using Visual Studio Code as your IDE to assist in programming Rust. After installing VSCode, you will need to install an extension also. After that we will go over how to install and run working examples.
 
