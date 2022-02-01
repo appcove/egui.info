@@ -17,17 +17,35 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 After the needed files have downloaded and installation has initiated, you will be prompted to choose your setup option. Use the default option - #1.
 
-![Rustup Setup Options](rust-setup-options.png)
+```
+Current installation options:
+   default host triple: x86_64-unknown-linux-gnu
+     default toolchain: stable (default)
+               profile: default
+  modify PATH variable: yes
+
+1) Proceed with installation (default)
+2) Customize installation
+3) Cancel installation
+>
+```
 
 Once setup has successfully completed, you should be shown confirmation text.
 
-![Rustup Is Installed](rust-is-installed.png)
+```
+Rust is installed now. Great!
+
+To get started you may need to restart your current shell.
+This would reload your PATH environment variable to include
+Cargo's bin directory ($HOME/.cargo/bin).
+
+To configure your current shell, runs:
+source $HOME/.cargo/env
+```
 
 There are a few dependencies for needed egui native backed to compile properly on Ubuntu. Run the following command to install these dependencies:
 
-```bash
-sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
-```
+`sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev`
 
 ## Install Visual Studio Code
 
