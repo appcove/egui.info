@@ -3,6 +3,6 @@
 theme: jekyll-theme-hacker
 
 
-edir: https://github.com/appcove/egui.info/tree/master/examples
+codeurl: https://github.com/appcove/egui.info/tree/master
 title: egui.info
 description: "Unofficial notes about the excellent egui crate"

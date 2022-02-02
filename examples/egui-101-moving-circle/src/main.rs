@@ -1,9 +1,8 @@
-use eframe::{epi, egui::{self, Stroke}};
+use eframe::epi;
+use eframe::egui;
+use egui::Color32;
+use egui::Stroke;
 
-use egui::color::Color32;
-
-
-//#[derive(Default)]
 struct ExampleApp {
     cx: f32,
     cy: f32,
@@ -16,23 +15,23 @@ impl Default for ExampleApp {
             cy: 100.0,
         }
     }
-
 }
-
 
 impl epi::App for ExampleApp {
     fn name(&self) -> &str {
-        "egui native basic"
+        "egui-101-moving-circle"
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
-        self.cy += 1.5;
+        
+        // Move the circle position
+        self.cy += 0.7;
+        self.cx += 0.25;
+
+        // Looks better on 4k montior
         ctx.set_pixels_per_point(1.5);
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("This is a ui.heading. ");
-            ui.label("This is a ui.label");
-
             if ui.button("Quit").clicked() {
                 frame.quit()
             };
@@ -54,8 +53,11 @@ impl epi::App for ExampleApp {
 
 fn main() {
     let app = ExampleApp::default();
-    let mut native_options = eframe::NativeOptions::default();
-    native_options.initial_window_size = Some(egui::Vec2{x:400.0, y:800.0});
+
+    let native_options = eframe::NativeOptions{
+        initial_window_size: Some(egui::Vec2{x: 400.0, y: 400.0}),
+        ..eframe::NativeOptions::default()
+    };
+
     eframe::run_native(Box::new(app), native_options);
-    
 }

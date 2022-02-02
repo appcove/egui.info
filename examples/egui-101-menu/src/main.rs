@@ -1,20 +1,12 @@
-use eframe::{epi, egui};
+use eframe::epi;
+use eframe::egui;
 
-struct ExampleApp {
-}
-
-impl Default for ExampleApp {
-    fn default() -> Self {
-        Self {
-     
-        }
-    }
-}
-
+#[derive(Default)]
+struct ExampleApp {}
 
 impl epi::App for ExampleApp {
     fn name(&self) -> &str {
-        "Menu Example Page"
+        "egui-101-menu"
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
@@ -50,8 +42,11 @@ impl epi::App for ExampleApp {
 
 fn main() {
     let app = ExampleApp::default();
-    let mut native_options = eframe::NativeOptions::default();
-    native_options.initial_window_size = Some(egui::Vec2{x:400.0, y:800.0});
-    eframe::run_native(Box::new(app), native_options);
     
+    let native_options = eframe::NativeOptions{
+        initial_window_size: Some(egui::Vec2{x: 400.0, y: 400.0}),
+        ..eframe::NativeOptions::default()
+    };
+
+    eframe::run_native(Box::new(app), native_options);
 }

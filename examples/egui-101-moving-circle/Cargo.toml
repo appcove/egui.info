@@ -1,16 +1,9 @@
 [package]
-name = "egui-101-menu"
+name = "egui-101-moving-circle"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.56"
 
 [dependencies]
 eframe = "0.16.0" # Gives us egui, epi and web+native backends
-
-
-[features]
-
-
-[profile.release]
-opt-level = 2 # fast and small wasm
 

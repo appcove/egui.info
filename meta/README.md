@@ -1,4 +1,4 @@
-# Meta
+# Contributing
 
 This page contains information pertaining to this website itself, and the development therein.
 
