@@ -1,0 +1,9 @@
+# These are used directly
+rich==11.1.0
+toml==0.10.2
+
+# These are dependancies
+colorama==0.4.4
+commonmark==0.9.1
+Pygments==2.11.2
+

@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+#vim:fileencoding=utf-8:ts=2:sw=2:sts=2:expandtab
+
+import subprocess
+import os.path
+import venv
+
+# Get the path from the .git directory location
+Path = os.path.abspath(subprocess.check_output(('git', 'rev-parse', '--show-toplevel'), encoding='utf-8')[0:-1])
+VirtualEnvPath = os.path.join(Path, '_meta/venv')
+
+      
+venv.create(env_dir=VirtualEnvPath, system_site_packages=False, clear=False, symlinks=True, with_pip=True)
+
+subprocess.call((
+  os.path.join(VirtualEnvPath, 'bin', 'pip'),
+  'install',
+  '-r', os.path.join(Path, '_meta/requirements.txt')
+))
+
+
+
