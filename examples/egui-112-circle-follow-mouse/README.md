@@ -1,7 +1,7 @@
 
-# egui-example-native-basic
+# egui-112-circle-follow-mouse
 
-This is a simple example with a heading, label, button, and circle.
+This is an example with a heading, label, button, and circle that follows the mouse.
 
 ## Source
 - [src/main.rs]({{ site.codeurl }}/examples/egui-101-basic/src/main.rs)
