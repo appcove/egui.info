@@ -20,6 +20,7 @@ cargo build
 1. [egu1-101-basic](./egui-101-basic): A heading, label, and button.
 1. [egui-101-menu](./egui-101-menu): A menu bar with several menus
 1. [egui-101-moving-circle](./egui-101-moving-circle): A circle which moves across the screen
+1. [egui-101-button-move-circle](./egui-101-button-move-circle): Buttons that effect a circle on the screen
 
 
 ## 112: Basic Interactions
