@@ -9,8 +9,8 @@ This is a simple example of buttons that effect a circle when pressed
 
 ## Screenshots
 
-<img src="screen1.png" alt="screenshot1" width="400"/>
-<img src="screen2.png" alt="drawing" width="400"/>
+![Screenshot](screen1.png)
+![Screenshot](screen2.png)
 
 ## Description
 
