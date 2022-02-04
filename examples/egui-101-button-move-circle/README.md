@@ -3,7 +3,7 @@
 
 This is a simple example of buttons that effect a circle when pressed
 ## Source
-- [src/main.rs]({{ site.codeurl }}/examples/egui-101-button-moves-circle/src/main.rs)
+- [src/main.rs]({{ site.codeurl }}/examples/egui-101-button-move-circle/src/main.rs)
 - [Project Directory]({{ site.codeurl }}/examples/egui-101-button-move-circle)
 
 

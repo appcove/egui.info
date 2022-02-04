@@ -21,6 +21,7 @@ cargo build
 1. [egui-101-menu](./egui-101-menu): A menu bar with several menus
 1. [egui-101-moving-circle](./egui-101-moving-circle): A circle which moves across the screen
 1. [egui-101-button-move-circle](./egui-101-button-move-circle): Buttons that effect a circle on the screen
+1. [egui-101-keypress-move-circle](./egui-101-keypress-move-circle): Moving a circle around the screen using keypresses
 
 
 ## 112: Basic Interactions
