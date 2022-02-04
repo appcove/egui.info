@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# vim:fileencoding=utf-8:ts=2:sw=2:sts=2:expandtab
+# vim:fileencoding=utf-8:ts=4:sw=4:sts=4:expandtab
 
 import subprocess
 import os.path
@@ -11,8 +11,8 @@ Path = os.path.abspath(subprocess.check_output(('git', 'rev-parse', '--show-topl
 
 # Bail out if the venv isn't in place
 if not os.path.exists(os.path.join(Path, '_meta/venv')):
-  print('Virtual Environment missing.  Please run `_meta/init`.')
-  sys.exit(1)
+    print('Virtual Environment missing.    Please run `_meta/init`.')
+    sys.exit(1)
 
 # Update the system path to use the venv
 sys.path[1:1] = [os.path.join(Path, '_meta/venv/lib/python3.8/site-packages')]
@@ -23,69 +23,87 @@ import rich
 import rich.console
 import toml
 
-
 # create rich console
 console = rich.console.Console()
-
-
 console.rule(f'Running Regen in `{Path}`')
 
-# Find the list of examples based on any directory within examples/ which has a Cargo.toml
-ExamplePathList = [os.path.dirname(p) for p in glob.glob(os.path.join(Path, 'examples', '*', 'Cargo.toml'))]
-ExampleList = []
+def main():
+    # Find the list of examples based on any directory within examples/ which has a Cargo.toml
+    ExamplePathList = [os.path.dirname(p) for p in glob.glob(os.path.join(Path, 'examples', '*', 'Cargo.toml'))]
+    ExampleList = []
 
-print()
-console.print('Found Examples:', style='white bold')
-print()
+    print()
+    console.print('Found Examples:', style='white bold')
+    print()
 
-for p in ExamplePathList:
-  console.print(p)
+    for p in ExamplePathList:
+        console.print(p)
+
+    print()
+    console.print('Parsing:', style='white bold')
+    print()
+
+    for p in ExamplePathList:
+        try:
+            o = Example(p)
+            o.print()
+            ExampleList.append(o)
+        except:
+            console.print(p)
+            raise
+
+    print()
+    console.print('Writing:', style='white bold')
+    print()
+
+    for o in ExampleList:
+        pass#o.print()
 
 
-
-
-
+# The main class for parsing and generating examples
 class Example():
-  def __init__(self, p):
-    self.Path = p
-    self.README_Path = os.path.join(self.Path, 'README.md')
+    def __init__(self, p):
+        self.Path = p
+        self.Name = os.path.basename(p)
+        self.README_Path = os.path.join(self.Path, 'README.md')
 
-    if os.path.exists(self.README_Path):
-      with open(self.README_Path, 'rt') as f:
-        self.README_Lines = f.readlines()
-    else:
-      self.README_Lines = None
+        if os.path.exists(self.README_Path):
+            with open(self.README_Path, 'rt') as f:
+                self.README_Lines = f.readlines()
+        else:
+            self.README_Lines = []
 
-  def __repr__(self):
-    return f'<Example `{self.Path}`>'
+        self.ScreenList = [os.path.basename(p) for p in glob.glob(os.path.join(self.Path, 'screen*.png'))]
 
-
-print()
-console.print('Parsing:', style='white bold')
-print()
-
-for p in ExamplePathList:
-  console.print(p)
-  ExampleList.append(Example(p))
-
-print()
-console.print('Writing:', style='white bold')
-print()
-
-for o in ExampleList:
-  console.print(o)
-  
+        self.H1_Description = None
+        self.H1_Extra = []
+        self.H2_Code_Lines = []
+        self.H2_Objective_Lines = []
+      
 
 
+    def print(self):
+        console.print(self)
+        console.print(f'  README.md Lines: {len(self.README_Lines)}')
+        console.print(f'  H1_Description: {self.H1_Description}')
+        console.print(f'  H1_Extra: {len(self.H1_Extra)} lines')
+        console.print(f'  H2_Code_Lines: {len(self.H2_Code_Lines)} lines')
+        console.print(f'  H2_Objective_Lines: {len(self.H2_Objective_Lines)} lines')
+        console.print(f'  Screenshots: {self.ScreenList}')
+        print()
 
-    
+    def __repr__(self):
+        return f'<Example "{self.Name}">'
 
 
-
-
+     
 
 
 
+
+# If invoked like a script, run the main function
+if __name__ == '__main__':
+    main()
 
 
 
