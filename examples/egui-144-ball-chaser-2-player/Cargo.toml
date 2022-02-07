@@ -6,4 +6,5 @@ rust-version = "1.56"
 
 [dependencies]
 eframe = "0.16.0" # Gives us egui, epi and web+native backends
+rand = "0.8"
 
