@@ -23,9 +23,10 @@ cargo build
 1. [egui-101-button-move-circle](./egui-101-button-move-circle): Buttons that effect a circle on the screen
 1. [egui-101-keypress-move-circle](./egui-101-keypress-move-circle): Moving a circle around the screen using keypresses
 
-
 ## 112: Basic Interactions
 
 1. [egui-112-circle-follow-mouse](./egui-112-circle-follow-mouse): Following the mouse pointer with a circle
 
+## 144: Basic Interactive Games
 
+1. [egui-144-clicker-game](./egui-144-clicker-game): Gets points for clicks

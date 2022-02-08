@@ -1,0 +1,9 @@
+[package]
+name = "egui-112-circle-follow-mouse"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.56"
+
+[dependencies]
+eframe = "0.16.0" # Gives us egui, epi and web+native backends
+rand = "0.8"
