@@ -4,8 +4,8 @@
 This is an example with a heading, label, button, and circle that follows the mouse.
 
 ## Source
-- [src/main.rs]({{ site.codeurl }}/examples/egui-101-basic/src/main.rs)
-- [Project Directory]({{ site.codeurl }}/examples/egui-101-basic)
+- [src/main.rs]({{ site.codeurl }}/examples/egui-112-basic/src/main.rs)
+- [Project Directory]({{ site.codeurl }}/examples/egui-112-basic)
 
 
 ## Screenshots

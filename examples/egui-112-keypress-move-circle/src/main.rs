@@ -52,12 +52,19 @@ impl epi::App for ExampleApp {
         if ctx.input().key_pressed(egui::Key::O){
             self.cc = Color32::from_rgb(215, 100, 000)
         }
-        if ctx.input().key_pressed(egui::Key::C){
+        if ctx.input().key_down(egui::Key::C){
             self.cc = Color32::from_rgb(000, 180, 215)
         }
         
 
         egui::CentralPanel::default().show(ctx, |ui| {
+            
+    
+            ui.monospace("Use W,A,S,D to move around.");
+            ui.monospace("Use O and C to change the color.");
+            ui.monospace("Use Up and Down arrow keys to change size.");
+
+            
             if ui.button("Quit").clicked() {
                 frame.quit()
             };
