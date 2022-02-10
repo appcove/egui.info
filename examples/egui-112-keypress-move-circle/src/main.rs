@@ -1,11 +1,12 @@
 use eframe::epi;
-use eframe::egui;
+use eframe::egui;   
 use egui::Color32;  //for circle
 use egui::Stroke;   //for cricle
 
 struct ExampleApp {
     cx: f32,
     cy: f32,
+    cs: f32,
     cc: Color32,
 }
 
@@ -14,6 +15,7 @@ impl Default for ExampleApp {
         Self {
             cx: 250.0,
             cy: 250.0,
+            cs: 50.0,
             cc: Color32::BLUE,
         }
     }
@@ -21,7 +23,7 @@ impl Default for ExampleApp {
 
 impl epi::App for ExampleApp {
     fn name(&self) -> &str {
-        "egui-101-button-move-circle"
+        "egui-112-keypress-move-circle"
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
@@ -29,27 +31,40 @@ impl epi::App for ExampleApp {
         // Looks better on 4k montior
         ctx.set_pixels_per_point(1.5);
 
+        if ctx.input().key_pressed(egui::Key::W) {
+            self.cy += -20.00
+        }
+        if ctx.input().key_pressed(egui::Key::S) {
+            self.cy += 20.00
+        }
+        if ctx.input().key_pressed(egui::Key::A) {
+            self.cx += -20.00
+        }
+        if ctx.input().key_pressed(egui::Key::D) {
+            self.cx += 20.00
+        }
+        if ctx.input().key_pressed(egui::Key::ArrowUp){
+            self.cs += 5.0
+        }
+        if ctx.input().key_pressed(egui::Key::ArrowDown){
+            self.cs += -5.0
+        }
+        if ctx.input().key_pressed(egui::Key::O){
+            self.cc = Color32::from_rgb(215, 100, 000)
+        }
+        if ctx.input().key_down(egui::Key::C){
+            self.cc = Color32::from_rgb(000, 180, 215)
+        }
+        
+
         egui::CentralPanel::default().show(ctx, |ui| {
-            if ui.button("Left").clicked() {
-                self.cx += -20.00
-            };
-            if ui.button("Up").clicked() {
-                self.cy += -20.00
-            };
-            if ui.button("Right").clicked() {
-                self.cx += 20.00
-            };
-            if ui.button("Down").clicked() {
-                self.cy += 20.00
-            };
-            if ui.button("Orange").clicked() {
-                self.cc = Color32::from_rgb(215, 100, 000)
-            };
-            if ui.button("Cyan").clicked() {
-                self.cc = Color32::from_rgb(000, 180, 215)
-            };
+            
+    
+            ui.monospace("Use W,A,S,D to move around.");
+            ui.monospace("Use O and C to change the color.");
+            ui.monospace("Use Up and Down arrow keys to change size.");
 
-
+            
             if ui.button("Quit").clicked() {
                 frame.quit()
             };
@@ -58,7 +73,7 @@ impl epi::App for ExampleApp {
 
             painter.circle(
                 egui::Pos2{x:self.cx,y:self.cy}, 
-                50.0, 
+                self.cs, 
                 self.cc, 
                 Stroke{width: 2.0, color: Color32::from_rgb(255, 255, 255)}
             );

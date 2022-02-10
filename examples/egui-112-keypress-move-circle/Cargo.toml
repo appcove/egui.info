@@ -1,5 +1,5 @@
 [package]
-name = "egui-101-keypress-move-circle"
+name = "egui-112-keypress-move-circle"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.56"
