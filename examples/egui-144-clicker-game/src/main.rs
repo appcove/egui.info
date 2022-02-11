@@ -22,7 +22,7 @@ impl Default for ExampleApp {
 
 impl epi::App for ExampleApp {
     fn name(&self) -> &str {
-        "egui 112 circle follow mouse"
+        "egui 144 clicker game"
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
