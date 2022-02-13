@@ -1,0 +1,9 @@
+[package]
+name = "egui-144-ball-chaser-two-player"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.56"
+
+[dependencies]
+eframe = "0.16" # Gives us egui, epi and web+native backends
+rand = "0.8"
