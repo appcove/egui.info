@@ -16,23 +16,28 @@ const LEVEL_SIZE_Y: usize = 1024;
 
 
 // Create a struct to reperesent a level with 1024x1024 tiles
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 struct Level {
-    tiles: [[u8; LEVEL_SIZE_X]; LEVEL_SIZE_Y],
+    tiles: Vec<u8>,
 }
 
 impl Default for Level {
     fn default() -> Self {
-        let mut tiles = [[0; LEVEL_SIZE_X]; LEVEL_SIZE_Y];
-        for y in 0..LEVEL_SIZE_Y{
-            for x in 0..LEVEL_SIZE_X{
-                tiles[y][x] = 1;
-            }
-        }
+        let tiles = vec![1; LEVEL_SIZE_X*LEVEL_SIZE_Y];
 
         Self {
             tiles: tiles,
         }
+    }
+}
+
+impl Level {
+    fn get_tile(&self, x: usize, y: usize) -> u8 {
+        self.tiles[y*LEVEL_SIZE_X + x]
+    }
+
+    fn set_tile(&mut self, x: usize, y: usize, value: u8) {
+        self.tiles[y*LEVEL_SIZE_X + x] = value;
     }
 }
 
@@ -153,7 +158,7 @@ impl epi::App for DorpalApp {
             let rt = painter.clip_rect();
 
             for (x,y) in self.view_rect_to_integeral_iterator(rt) {
-                let tile = self.level.tiles[y][x];
+                let tile = self.level.get_tile(x, y);
                 let screen_rect = self.integral_to_screen_rect(x,y);
 
                 if tile == 1 {
@@ -181,26 +186,10 @@ impl epi::App for DorpalApp {
                 //println!("{:?}", (mousepos, x,y));
 
                 if pointer.primary_down(){
-                    self.level.tiles[y-1][x-1] = 0;
-                    self.level.tiles[y-1][x] = 0;
-                    self.level.tiles[y-1][x+1] = 0;
-                    self.level.tiles[y][x-1] = 0;
-                    self.level.tiles[y][x] = 0;
-                    self.level.tiles[y][x+1] = 0;
-                    self.level.tiles[y+1][x-1] = 0;
-                    self.level.tiles[y+1][x] = 0;
-                    self.level.tiles[y+1][x+1] = 0;                   
+                    self.level.set_tile(x,y, 1);
                 }
                 if pointer.secondary_down(){
-                    self.level.tiles[y-1][x-1] = 1;
-                    self.level.tiles[y-1][x] = 1;
-                    self.level.tiles[y-1][x+1] = 1;
-                    self.level.tiles[y][x-1] = 1;
-                    self.level.tiles[y][x] = 1;
-                    self.level.tiles[y][x+1] = 1;
-                    self.level.tiles[y+1][x-1] = 1;
-                    self.level.tiles[y+1][x] = 1;
-                    self.level.tiles[y+1][x+1] = 1;  
+                    self.level.set_tile(x,y, 0);
                 }
             }
 
