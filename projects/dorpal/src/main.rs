@@ -5,26 +5,29 @@ use egui::Color32;  //for circle
 use egui::Stroke;   //for cricle
 use egui::Key;
 use egui::Pos2;
-//use egui::Vec2;
+use egui::Vec2;
+use egui::Rect;
 
-const ACCEL_PER_FRAME: f32 = 0.1;
-const ANGLE_PER_FRAME: f32 = 0.1;
-const MAX_SPEED: f32 = 8.0;
-const WHITE_STROKE: Stroke = Stroke{width: 2.0, color: Color32::WHITE};
+const POINTS_PER_TILE: f32 = 25.0;
+const LEVEL_SIZE_X: usize = 102;
+const LEVEL_SIZE_Y: usize = 102;
+//const WHITE_STROKE: Stroke = Stroke{width: 2.0, color: Color32::WHITE};
 //const NO_STROKE: Stroke = Stroke{width: 0.0, color: Color32::TRANSPARENT};
 
 
 // Create a struct to reperesent a level with 1024x1024 tiles
 #[derive(Clone, Copy)]
 struct Level {
-    tiles: [u8; 1024*1024],
+    tiles: [[u8; LEVEL_SIZE_X]; LEVEL_SIZE_Y],
 }
 
 impl Default for Level {
     fn default() -> Self {
-        let mut tiles = [0; 1024*1024];
-        for i in 0..1024*1024 {
-            tiles[i] = rand::random::<u8>() % 2;
+        let mut tiles = [[0; LEVEL_SIZE_X]; LEVEL_SIZE_Y];
+        for y in 0..LEVEL_SIZE_Y{
+            for x in 0..LEVEL_SIZE_X{
+                tiles[y][x] = rand::random::<u8>() % 24;
+            }
         }
 
         Self {
@@ -35,7 +38,7 @@ impl Default for Level {
 
 
 struct DorpalApp {
-
+    view_center: Vec2,
     level: Level,
 }
 
@@ -43,6 +46,7 @@ struct DorpalApp {
 impl Default for DorpalApp {
     fn default() -> Self {
         Self {
+            view_center: Vec2::new((LEVEL_SIZE_X as f32)*POINTS_PER_TILE*0.5, (LEVEL_SIZE_Y as f32)*POINTS_PER_TILE*0.5),
             level: Level::default(),
         }
     }
@@ -80,15 +84,19 @@ impl epi::App for DorpalApp {
         }
 
         if instate.key_down(Key::W) {
+            self.view_center =  self.view_center + Vec2::new(0.0, -2.0);
         }
 
         if instate.key_down(Key::S) {
+            self.view_center =  self.view_center + Vec2::new(0.0, 2.0);
         }
 
         if instate.key_down(Key::A) {
+            self.view_center =  self.view_center + Vec2::new(-2.0, 0.0);
         }
 
         if instate.key_down(Key::D) {
+            self.view_center =  self.view_center + Vec2::new(2.0, 0.0);
         }
 
         egui::TopBottomPanel::top("topnav").show(ctx, |ui| {
@@ -104,13 +112,34 @@ impl epi::App for DorpalApp {
        
         egui::CentralPanel::default().show(ctx, |ui| {
     
-            let mut painter = ui.painter();
+            let painter = ui.painter();
             let rt = painter.clip_rect();
 
-            painter.line_segment([painter.clip_rect().left_bottom(), painter.clip_rect().right_top()], WHITE_STROKE);
-            painter.line_segment([painter.clip_rect().left_top(), painter.clip_rect().right_bottom()], WHITE_STROKE);
+            for y in 0..LEVEL_SIZE_Y{
+                for x in 0..LEVEL_SIZE_X{
+                    let xx = (x as f32)*POINTS_PER_TILE;
+                    let yy = (y as f32)*POINTS_PER_TILE;
+                    let tile_rect = Rect::from_two_pos(
+                        Pos2::new(xx, yy), 
+                        Pos2::new(xx+POINTS_PER_TILE, yy+POINTS_PER_TILE)
+                    );
+                    
+                    let screen_rect = tile_rect.translate(-self.view_center);
 
-           
+
+                    if self.level.tiles[y][x] == 0 {
+                        painter.rect_filled(
+                            screen_rect, 
+                            POINTS_PER_TILE/4.0, 
+                            Color32::WHITE
+                        );  
+                    }
+
+                }
+            }
+
+            
+
         });
 
         // This is how to go into continuous mode - uncomment this to see example of continuous mode
