@@ -24,7 +24,7 @@ struct Level {
 impl Default for Level {
     fn default() -> Self {
         Self {
-            tiles: vec![0; LEVEL_SIZE_X*LEVEL_SIZE_Y],
+            tiles: vec![1; LEVEL_SIZE_X*LEVEL_SIZE_Y],
         }
     }
 }
@@ -40,12 +40,13 @@ impl Level {
 }
 
 struct Player {
-    pos: Pos2,
+    location: Vec2,
 }
 
 struct DorpalApp {
     view_anchor: Vec2,
     level: Level,
+    player: Player,
 }
 
 
@@ -65,6 +66,9 @@ impl Default for DorpalApp {
             //view_center: Vec2::new((LEVEL_SIZE_X as f32)*POINTS_PER_TILE*0.5, (LEVEL_SIZE_Y as f32)*POINTS_PER_TILE*0.5),
             view_anchor: Vec2::new(0.0, 0.0),
             level: level,
+            player: Player {
+                location: Vec2::new(10.5, 10.5),
+            }
         }
     }
 }
@@ -74,10 +78,26 @@ impl DorpalApp {
         *self = Self::default();
     }
 
-    fn screen_pos_to_absolute_pos(&self, pos: Pos2) -> Vec2 {
+
+    fn center_view_on_absolute_pos(&mut self, absolute_vec: Vec2, screen_rect:Rect) {
+        self.view_anchor = Vec2::new(
+            absolute_vec.x * POINTS_PER_TILE,
+            absolute_vec.y * POINTS_PER_TILE,
+        ) - screen_rect.center().to_vec2();
+        println!("view_anchor: {:?}", self.view_anchor);
+    }
+
+    fn onscreen_pos_to_absolute_vec(&self, pos: Pos2) -> Vec2 {
         return Vec2::new(
             (self.view_anchor.x + pos.x) / POINTS_PER_TILE, 
             (self.view_anchor.y + pos.y) / POINTS_PER_TILE
+        );
+    }
+
+    fn absolute_vec_to_onscreen_pos(&self, vec: Vec2) -> Pos2 {
+        return Pos2::new(
+            vec.x * POINTS_PER_TILE - self.view_anchor.x,
+            vec.y * POINTS_PER_TILE - self.view_anchor.y,
         );
     }
 
@@ -149,19 +169,19 @@ impl epi::App for DorpalApp {
         }
 
         if instate.key_down(Key::W) {
-            self.view_anchor =  self.view_anchor + Vec2::new(0.0, -12.0);
+            self.player.location.y -= 0.1;
         }
 
         if instate.key_down(Key::S) {
-            self.view_anchor =  self.view_anchor + Vec2::new(0.0, 12.0);
+            self.player.location.y += 0.1;
         }
 
         if instate.key_down(Key::A) {
-            self.view_anchor =  self.view_anchor + Vec2::new(-12.0, 0.0);
+            self.player.location.x -= 0.1;
         }
 
         if instate.key_down(Key::D) {
-            self.view_anchor =  self.view_anchor + Vec2::new(12.0, 0.0);
+            self.player.location.x += 0.1;
         }
 
         egui::TopBottomPanel::top("topnav").show(ctx, |ui| {
@@ -174,10 +194,10 @@ impl epi::App for DorpalApp {
                 };
             });
         });
-       
+
         egui::CentralPanel::default().show(ctx, |ui| {
     
-            let painter = ui.painter();
+            let painter = ui.painter_at(Rect::everything_below(25.0));
             let view_rect_onscreen = painter.clip_rect();
 
             for (x,y) in self.view_rect_to_integeral_iterator(view_rect_onscreen) {
@@ -194,51 +214,63 @@ impl epi::App for DorpalApp {
                         _ => Color32::BLACK,
                     }
                 );  
-
-                
-
             }
-        
+
+            
+
+            painter.circle_filled(
+                self.absolute_vec_to_onscreen_pos(self.player.location), 
+                POINTS_PER_TILE, 
+                Color32::LIGHT_BLUE
+            );
+       
 
             let pointer = &ctx.input().pointer;
 
             if let Some(mousepos) = pointer.hover_pos() {
-                painter.circle(
-                    mousepos,
-                    50.0, 
-                    Color32::TRANSPARENT, 
-                    Stroke{width: 2.0, color: Color32::LIGHT_YELLOW}
-                );
-                
-                let (x,y) = self.screen_pos_to_integral(mousepos);
-                //println!("{:?}", (mousepos, x,y));
+                if view_rect_onscreen.contains(mousepos) {
+                    /*
+                    painter.circle(
+                        mousepos,
+                        50.0, 
+                        Color32::TRANSPARENT, 
+                        Stroke{width: 2.0, color: Color32::LIGHT_YELLOW}
+                    );
+                    */
+                    
+                    let (x,y) = self.screen_pos_to_integral(mousepos);
+                    //println!("{:?}", (mousepos, x,y));
 
-                println!("{:?}", self.screen_pos_to_absolute_pos(mousepos));
+                    //println!("{:?}", self.screen_pos_to_absolute_pos(mousepos));
 
-                if pointer.primary_down(){
-                    self.level.set_tile(x-1,y-1, 1);
-                    self.level.set_tile(x, y-1, 1);
-                    self.level.set_tile(x+1,y-1, 1);
-                    self.level.set_tile(x-1,y, 1);
-                    self.level.set_tile(x, y, 1);
-                    self.level.set_tile(x+1,y, 1);
-                    self.level.set_tile(x-1,y+1, 1);
-                    self.level.set_tile(x, y+1, 1);
-                    self.level.set_tile(x+1,y+1, 1);
-                }
-                if pointer.secondary_down(){
-                    self.level.set_tile(x-1,y-1, 0);
-                    self.level.set_tile(x, y-1, 0);
-                    self.level.set_tile(x+1,y-1, 0);
-                    self.level.set_tile(x-1,y, 0);
-                    self.level.set_tile(x, y, 0);
-                    self.level.set_tile(x+1,y, 0);
-                    self.level.set_tile(x-1,y+1, 0);
-                    self.level.set_tile(x, y+1, 0);
-                    self.level.set_tile(x+1,y+1, 0);
+                    if pointer.middle_down(){
+                        self.center_view_on_absolute_pos(self.player.location, view_rect_onscreen);
+                    }
+
+                    if pointer.primary_down(){
+                        self.level.set_tile(x-1,y-1, 1);
+                        self.level.set_tile(x, y-1, 1);
+                        self.level.set_tile(x+1,y-1, 1);
+                        self.level.set_tile(x-1,y, 1);
+                        self.level.set_tile(x, y, 1);
+                        self.level.set_tile(x+1,y, 1);
+                        self.level.set_tile(x-1,y+1, 1);
+                        self.level.set_tile(x, y+1, 1);
+                        self.level.set_tile(x+1,y+1, 1);
+                    }
+                    if pointer.secondary_down(){
+                        self.level.set_tile(x-1,y-1, 0);
+                        self.level.set_tile(x, y-1, 0);
+                        self.level.set_tile(x+1,y-1, 0);
+                        self.level.set_tile(x-1,y, 0);
+                        self.level.set_tile(x, y, 0);
+                        self.level.set_tile(x+1,y, 0);
+                        self.level.set_tile(x-1,y+1, 0);
+                        self.level.set_tile(x, y+1, 0);
+                        self.level.set_tile(x+1,y+1, 0);
+                    }
                 }
             }
-
         });
 
         // This is how to go into continuous mode - uncomment this to see example of continuous mode
