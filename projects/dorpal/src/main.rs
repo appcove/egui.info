@@ -11,20 +11,28 @@ use egui::Rect;
 const POINTS_PER_TILE: f32 = 50.0;
 const LEVEL_SIZE_X: usize = 1024;
 const LEVEL_SIZE_Y: usize = 1024;
-//const WHITE_STROKE: Stroke = Stroke{width: 2.0, color: Color32::WHITE};
+const YELLOW_STROKE: Stroke = Stroke{width: 2.0, color: Color32::YELLOW};
 //const NO_STROKE: Stroke = Stroke{width: 0.0, color: Color32::TRANSPARENT};
+
+#[derive(Clone)]
+struct Prez {
+    location: Vec2,
+    radius: f32,
+}
 
 
 // Create a struct to reperesent a level with 1024x1024 tiles
 #[derive(Clone)]
 struct Level {
     tiles: Vec<u16>,
+    prezlist: Vec<Prez>,
 }
 
 impl Default for Level {
     fn default() -> Self {
         Self {
-            tiles: vec![1; LEVEL_SIZE_X*LEVEL_SIZE_Y],
+            tiles: vec![0; LEVEL_SIZE_X*LEVEL_SIZE_Y],
+            prezlist: vec![],
         }
     }
 }
@@ -39,14 +47,10 @@ impl Level {
     }
 }
 
-struct Player {
-    location: Vec2,
-}
 
 struct DorpalApp {
     view_anchor: Vec2,
     level: Level,
-    player: Player,
 }
 
 
@@ -62,13 +66,12 @@ impl Default for DorpalApp {
             level.set_tile(LEVEL_SIZE_X-1,y,2);
         }
 
+        level.prezlist.push(Prez{location: Vec2{x: 10.0, y: 10.0}, radius: 1.0});
+
         Self {
             //view_center: Vec2::new((LEVEL_SIZE_X as f32)*POINTS_PER_TILE*0.5, (LEVEL_SIZE_Y as f32)*POINTS_PER_TILE*0.5),
             view_anchor: Vec2::new(0.0, 0.0),
             level: level,
-            player: Player {
-                location: Vec2::new(10.5, 10.5),
-            }
         }
     }
 }
@@ -169,19 +172,19 @@ impl epi::App for DorpalApp {
         }
 
         if instate.key_down(Key::W) {
-            self.player.location.y -= 0.1;
+            self.view_anchor.y -= 12.2;
         }
 
         if instate.key_down(Key::S) {
-            self.player.location.y += 0.1;
+            self.view_anchor.y += 12.2;
         }
 
         if instate.key_down(Key::A) {
-            self.player.location.x -= 0.1;
+            self.view_anchor.x -= 12.2;
         }
 
         if instate.key_down(Key::D) {
-            self.player.location.x += 0.1;
+            self.view_anchor.x += 12.2;
         }
 
         egui::TopBottomPanel::top("topnav").show(ctx, |ui| {
@@ -216,17 +219,17 @@ impl epi::App for DorpalApp {
                 );  
             }
 
-            
-
-            painter.circle_filled(
-                self.absolute_vec_to_onscreen_pos(self.player.location), 
-                POINTS_PER_TILE, 
-                Color32::LIGHT_BLUE
-            );
-       
+            for prez in self.level.prezlist.iter() {
+                let pos = self.absolute_vec_to_onscreen_pos(prez.location);
+                painter.circle_filled(
+                    pos, 
+                    prez.radius*POINTS_PER_TILE, 
+                    Color32::WHITE
+                );
+            }
 
             let pointer = &ctx.input().pointer;
-
+           
             if let Some(mousepos) = pointer.hover_pos() {
                 if view_rect_onscreen.contains(mousepos) {
                     /*
@@ -237,15 +240,47 @@ impl epi::App for DorpalApp {
                         Stroke{width: 2.0, color: Color32::LIGHT_YELLOW}
                     );
                     */
+
+                    let mvec = self.onscreen_pos_to_absolute_vec(mousepos);
+                    let mut proposed_center:Option<Vec2> = None;
+                    
+                    let mut nearest:Vec<(f32, f32, &Prez)> = vec![];
+
+                    for prez in self.level.prezlist.iter() {
+
+                        let diff = mvec - prez.location;
+                        let angl = diff.angle();
+                        let leng = diff.length();
+                        
+                        if leng < 20.0 {
+                            nearest.push((leng, angl, prez));
+                        }
+                    }
+
+                    nearest.sort_by(|a,b| a.0.partial_cmp(&b.0).unwrap());
+
+                    if nearest.len() > 0 {
+                        proposed_center = Some(nearest[0].2.location + Vec2::angled(nearest[0].1) * 2.50);
+                        painter.circle_stroke(
+                            self.absolute_vec_to_onscreen_pos(proposed_center.unwrap()), 
+                            1.0*POINTS_PER_TILE, 
+                            YELLOW_STROKE
+                        );
+                    }
+
+                    
+
+                    if instate.key_pressed(Key::Space) {
+                        if let Some(p) = proposed_center {
+                            self.level.prezlist.push(Prez{location: p, radius: 1.0});
+                        }
+                    }
                     
                     let (x,y) = self.screen_pos_to_integral(mousepos);
                     //println!("{:?}", (mousepos, x,y));
 
                     //println!("{:?}", self.screen_pos_to_absolute_pos(mousepos));
 
-                    if pointer.middle_down(){
-                        self.center_view_on_absolute_pos(self.player.location, view_rect_onscreen);
-                    }
 
                     if pointer.primary_down(){
                         self.level.set_tile(x-1,y-1, 1);
