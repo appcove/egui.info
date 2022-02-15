@@ -1,5 +1,5 @@
 [package]
-name = "egui-101-button-move-circle"
+name = "egui-112-button-move-circle"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.56"
