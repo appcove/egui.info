@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 use rand;
 use eframe::epi;
@@ -62,6 +63,35 @@ impl Level {
     fn get_cell(&self, x: usize, y: usize) -> Option<&Cell> {
         self.energy.get(&(x,y))
     }
+
+    fn get_adjacent_cells(&self, x: usize, y: usize) -> Vec<(usize,usize)> {
+        let mut cells = Vec::new();
+        if self.energy.contains_key(&(x-1,y)) {
+            cells.push((x-1,y));
+        }
+        if self.energy.contains_key(&(x+1,y)) {
+            cells.push((x+1,y));
+        }
+        if self.energy.contains_key(&(x,y-1)) {
+            cells.push((x,y-1));
+        }
+        if self.energy.contains_key(&(x,y+1)) {
+            cells.push((x,y+1));
+        }
+        return cells;
+    }
+
+    fn rem_cell(&mut self, x: usize, y: usize) {
+        if let Some(cell) = self.get_cell(x, y) {
+            let adj_cells = self.get_adjacent_cells(x, y);
+            let add_v = cell.v / adj_cells.len() as f32;
+            for (nx,ny) in adj_cells {
+                self.energy.get_mut(&(nx,ny)).unwrap().v += add_v;
+            }
+        }
+        
+        self.energy.remove(&(x,y));
+    }
         
 }
 
@@ -101,10 +131,38 @@ impl DorpalApp {
         for energy_cell in self.level.energy.values_mut() {
             // TODO how to call the get_cell ?
             if self.level.tiles[energy_cell.y*LEVEL_SIZE_X + energy_cell.x] & 0b00000000_00111111 == 0 {
-                energy_cell.v -= 0.2;
+                energy_cell.v -= 0.5;
+            }
+            else if self.level.tiles[energy_cell.y*LEVEL_SIZE_X + energy_cell.x] & 0b00000000_00111111 == 9 {
+                energy_cell.v = (energy_cell.v+4.0).clamp(0.0, 255.0);
             }
         }
-        self.level.energy.retain(|_, cell| cell.v > 0.0);
+
+        self.level.energy.retain(|_,cell| { cell.v > 0.0 });
+
+        let mut adjustment = Vec::<(usize, usize, f32)>::new();
+
+        for (x,y) in self.level.energy.keys() {
+            let cur_cell = self.level.energy.get(&(*x,*y)).unwrap();
+            let adj_cells = self.level.get_adjacent_cells(*x,*y);
+            let length = adj_cells.len() as f32;
+            if length > 0.0 {
+                for (nx,ny) in adj_cells {
+                    if let Some(adj_cell) = self.level.get_cell(nx,ny) {
+                        if adj_cell.v < cur_cell.v {
+                            let ed = ((cur_cell.v - adj_cell.v)/5.0).max(1.0);
+                            adjustment.push((*x,*y,-ed));
+                            adjustment.push((nx,ny,ed));
+                        }
+                    }
+                }
+            }
+        }
+
+        for (x,y,v) in adjustment {
+            self.level.energy.get_mut(&(x,y)).unwrap().v += v;
+        }
+
     }
 
     fn center_view_on_absolute_pos(&mut self, absolute_vec: Vec2, screen_rect:Rect) {
@@ -307,11 +365,16 @@ impl epi::App for DorpalApp {
                     else if pointer.primary_down(){
                         let tile = self.level.get_tile(x,y);
                         if tile == 0 || tile == 1 {
-                            self.level.add_cell(x, y, 64.0)
+                            if self.level.get_adjacent_cells(x, y).len() > 0 {
+                                self.level.add_cell(x, y, 4.0)
+                            }
+                        }
+                        if tile == 9 && ! self.level.energy.contains_key(&(x,y)) {
+                            self.level.add_cell(x, y, 4.0)
                         }
                     }
                     else if pointer.secondary_down(){
-                        self.level.energy.remove(&(x,y));
+                        self.level.rem_cell(x, y);
                     }
 
                 }
