@@ -3,6 +3,9 @@ use eframe::egui;
 use rand::Rng;
 use egui::Color32;  //for circle
 use egui::Stroke;   //for cricle
+use egui::Rect;
+use egui::Pos2;
+use egui::Vec2;
 
 struct ExampleApp {
     cx: f32,
@@ -15,6 +18,9 @@ struct ExampleApp {
     ty: f32,
     ts: f32,
     dd: f32,
+
+    // This will be set on every frame, but defaulted to 1000x700 on first frame
+    screen_rect: Rect,
 }
 
 impl Default for ExampleApp {
@@ -26,10 +32,11 @@ impl Default for ExampleApp {
             cc: Color32::BLUE,
             sx: 0.0,
             sy: 0.0,
-            tx: 500.0,
-            ty: 500.0,
+            tx: 300.0,
+            ty: 300.0,
             ts: 50.0,
             dd: 0.0,
+            screen_rect: Rect{min: Pos2{x: 0.0, y: 0.0}, max: Pos2{x: 1000.0, y: 700.0}},
         }
     }
 }
@@ -43,46 +50,41 @@ impl epi::App for ExampleApp {
     }
     
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
-        
-
 
         // Looks better on 4k montior
         ctx.set_pixels_per_point(1.5);
         self.dd = self.cs + self.ts;
 
         if (egui::Pos2{x:self.cx,y:self.cy}).distance(egui::Pos2{x:self.tx,y:self.ty}) < self.dd {
-            self.tx = rand::thread_rng().gen_range(0.0..1000.0);
-            self.ty = rand::thread_rng().gen_range(0.0..1000.0);    
+            self.tx = rand::thread_rng().gen_range(self.screen_rect.min.x..self.screen_rect.max.x);
+            self.ty = rand::thread_rng().gen_range(self.screen_rect.min.y..self.screen_rect.max.y);    
         }
 
 
         self.cx += self.sx;
         self.cy += self.sy;
 
-        if self.sx > 0.00 {
-            self.sx -= 0.01
+        let svec = Vec2{x:self.sx, y:self.sy};
+        if svec.length() > 0.0 {
+            let nvec = Vec2::angled(svec.angle()) * (svec.length() - svec.length().min(0.01));
+            self.sx = nvec.x;
+            self.sy = nvec.y;
         }
-        else if self.sx < 0.00 {
-            self.sx += 0.01
-        }
-        if self.sy > 0.00 {
-            self.sy -= 0.01
-        }
-        else if self.sy < 0.00 {
-            self.sy += 0.01
+    
+        if self.cx < self.screen_rect.min.x {
+            self.sx = self.sx.abs();
         }
 
-        if self.cx < 0.0 {
-            self.sx = 3.0
+        if self.cx > self.screen_rect.max.x {
+            self.sx = -self.sx.abs();
         }
-        if self.cx > 1000.0 {
-            self.sx = -3.0
+        
+        if self.cy < self.screen_rect.min.y {
+            self.sy = self.sy.abs();
         }
-        if self.cy > 1000.0 {
-            self.sy = -3.0
-        }
-        if self.cy < 0.0 {
-            self.sy = 3.0
+
+        if self.cy > self.screen_rect.max.y {
+            self.sy = -self.sy.abs();
         }
 
 
@@ -114,8 +116,10 @@ impl epi::App for ExampleApp {
         
 
         egui::CentralPanel::default().show(ctx, |ui| {
-
             let painter = ui.painter();
+
+            // Update this in case window size changed -- for next frame
+            self.screen_rect = painter.clip_rect();
 
             painter.circle(
                 egui::Pos2{x:self.cx,y:self.cy}, 
@@ -156,7 +160,7 @@ fn main() {
     let app = ExampleApp::default();
 
     let native_options = eframe::NativeOptions{
-        initial_window_size: Some(egui::Vec2{x: 1700.0, y: 1700.0}),
+        initial_window_size: Some(egui::Vec2{x: 1000.0, y: 700.0}),
         ..eframe::NativeOptions::default()
     };
 
