@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use rand;
 use eframe::epi;
 use eframe::egui;   
@@ -9,30 +11,31 @@ use egui::Vec2;
 use egui::Rect;
 
 const POINTS_PER_TILE: f32 = 50.0;
-const LEVEL_SIZE_X: usize = 1024;
-const LEVEL_SIZE_Y: usize = 1024;
+const LEVEL_SIZE_X: usize = 128;
+const LEVEL_SIZE_Y: usize = 128;
 const YELLOW_STROKE: Stroke = Stroke{width: 2.0, color: Color32::YELLOW};
 //const NO_STROKE: Stroke = Stroke{width: 0.0, color: Color32::TRANSPARENT};
 
-#[derive(Clone)]
-struct Prez {
-    location: Vec2,
-    radius: f32,
-}
 
+#[derive(Clone)]
+struct Cell{
+    x: usize,
+    y: usize,
+    v: f32,
+}
 
 // Create a struct to reperesent a level with 1024x1024 tiles
 #[derive(Clone)]
 struct Level {
     tiles: Vec<u16>,
-    prezlist: Vec<Prez>,
+    energy: HashMap<(usize,usize),Cell>,
 }
 
 impl Default for Level {
     fn default() -> Self {
         Self {
             tiles: vec![0; LEVEL_SIZE_X*LEVEL_SIZE_Y],
-            prezlist: vec![],
+            energy: HashMap::new(),
         }
     }
 }
@@ -44,6 +47,10 @@ impl Level {
 
     fn set_tile(&mut self, x: usize, y: usize, value: u16) {
         self.tiles[y*LEVEL_SIZE_X + x] = value;
+    }
+
+    fn add_cell(&mut self, x: usize, y: usize, v: f32) {
+        self.energy.insert((x,y), Cell{x,y,v});
     }
 }
 
@@ -65,8 +72,6 @@ impl Default for DorpalApp {
             level.set_tile(0,y,2);
             level.set_tile(LEVEL_SIZE_X-1,y,2);
         }
-
-        level.prezlist.push(Prez{location: Vec2{x: 10.0, y: 10.0}, radius: 1.0});
 
         Self {
             //view_center: Vec2::new((LEVEL_SIZE_X as f32)*POINTS_PER_TILE*0.5, (LEVEL_SIZE_Y as f32)*POINTS_PER_TILE*0.5),
@@ -104,7 +109,7 @@ impl DorpalApp {
         );
     }
 
-    fn screen_pos_to_integral(&self, screen_pos: Pos2) -> (usize,usize) {
+    fn onscreen_pos_to_integral(&self, screen_pos: Pos2) -> (usize,usize) {
         let pos = screen_pos + self.view_anchor;
         let ix = (pos.x / POINTS_PER_TILE).floor() as usize;
         let iy = (pos.y / POINTS_PER_TILE).floor() as usize;
@@ -127,12 +132,12 @@ impl DorpalApp {
         return screen_rect;
     }
 
-    fn view_rect_to_integeral_iterator(&self, view_rect: Rect) -> Vec<(usize,usize)> {
+    fn onscreen_to_absolute_iterator(&self, view_rect: Rect) -> Vec<(usize,usize)> {
         let mut ret = Vec::new();
         let top_left = view_rect.min;
         let bottom_right = view_rect.max;
-        let (x1,y1) = self.screen_pos_to_integral(top_left);
-        let (x2,y2) = self.screen_pos_to_integral(bottom_right);
+        let (x1,y1) = self.onscreen_pos_to_integral(top_left);
+        let (x2,y2) = self.onscreen_pos_to_integral(bottom_right);
         for y in y1..=y2{
             for x in x1..=x2{
                 if x < LEVEL_SIZE_X && y < LEVEL_SIZE_Y {
@@ -203,7 +208,7 @@ impl epi::App for DorpalApp {
             let painter = ui.painter_at(Rect::everything_below(25.0));
             let view_rect_onscreen = painter.clip_rect();
 
-            for (x,y) in self.view_rect_to_integeral_iterator(view_rect_onscreen) {
+            for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
                 let tile = self.level.get_tile(x, y);
                 let tile_rect_onscreen = self.integral_to_rect_onscreen(x,y);
 
@@ -219,90 +224,40 @@ impl epi::App for DorpalApp {
                 );  
             }
 
-            for prez in self.level.prezlist.iter() {
-                let pos = self.absolute_vec_to_onscreen_pos(prez.location);
-                painter.circle_filled(
-                    pos, 
-                    prez.radius*POINTS_PER_TILE, 
-                    Color32::WHITE
-                );
-            }
-
             let pointer = &ctx.input().pointer;
            
             if let Some(mousepos) = pointer.hover_pos() {
                 if view_rect_onscreen.contains(mousepos) {
-                    /*
-                    painter.circle(
-                        mousepos,
-                        50.0, 
-                        Color32::TRANSPARENT, 
-                        Stroke{width: 2.0, color: Color32::LIGHT_YELLOW}
-                    );
-                    */
+                  
+                    let (x,y) = self.onscreen_pos_to_integral(mousepos);
 
-                    let mvec = self.onscreen_pos_to_absolute_vec(mousepos);
-                    let mut proposed_center:Option<Vec2> = None;
-                    
-                    let mut nearest:Vec<(f32, f32, &Prez)> = vec![];
-
-                    for prez in self.level.prezlist.iter() {
-
-                        let diff = mvec - prez.location;
-                        let angl = diff.angle();
-                        let leng = diff.length();
-                        
-                        if leng < 20.0 {
-                            nearest.push((leng, angl, prez));
+                    if instate.key_down(Key::Space) {
+                        if pointer.primary_down(){
+                            self.level.set_tile(x, y, 1);
+                        }
+                        if pointer.secondary_down(){
+                            self.level.set_tile(x, y, 0);
                         }
                     }
-
-                    nearest.sort_by(|a,b| a.0.partial_cmp(&b.0).unwrap());
-
-                    if nearest.len() > 0 {
-                        proposed_center = Some(nearest[0].2.location + Vec2::angled(nearest[0].1) * 2.50);
-                        painter.circle_stroke(
-                            self.absolute_vec_to_onscreen_pos(proposed_center.unwrap()), 
-                            1.0*POINTS_PER_TILE, 
-                            YELLOW_STROKE
-                        );
-                    }
-
-                    
-
-                    if instate.key_pressed(Key::Space) {
-                        if let Some(p) = proposed_center {
-                            self.level.prezlist.push(Prez{location: p, radius: 1.0});
+                    else if instate.key_down(Key::B)  {
+                        if pointer.primary_down(){
+                            for x in x-2..=x+2{
+                                for y in y-2..=y+2{
+                                    if x > 0 && x < LEVEL_SIZE_X-1 && y > 0 && y < LEVEL_SIZE_Y-1 {
+                                        self.level.set_tile(x, y, 1);
+                                    }
+                                }
+                            }
                         }
-                    }
-                    
-                    let (x,y) = self.screen_pos_to_integral(mousepos);
-                    //println!("{:?}", (mousepos, x,y));
-
-                    //println!("{:?}", self.screen_pos_to_absolute_pos(mousepos));
-
-
-                    if pointer.primary_down(){
-                        self.level.set_tile(x-1,y-1, 1);
-                        self.level.set_tile(x, y-1, 1);
-                        self.level.set_tile(x+1,y-1, 1);
-                        self.level.set_tile(x-1,y, 1);
-                        self.level.set_tile(x, y, 1);
-                        self.level.set_tile(x+1,y, 1);
-                        self.level.set_tile(x-1,y+1, 1);
-                        self.level.set_tile(x, y+1, 1);
-                        self.level.set_tile(x+1,y+1, 1);
-                    }
-                    if pointer.secondary_down(){
-                        self.level.set_tile(x-1,y-1, 0);
-                        self.level.set_tile(x, y-1, 0);
-                        self.level.set_tile(x+1,y-1, 0);
-                        self.level.set_tile(x-1,y, 0);
-                        self.level.set_tile(x, y, 0);
-                        self.level.set_tile(x+1,y, 0);
-                        self.level.set_tile(x-1,y+1, 0);
-                        self.level.set_tile(x, y+1, 0);
-                        self.level.set_tile(x+1,y+1, 0);
+                        if pointer.secondary_down(){
+                            for x in x-2..=x+2{
+                                for y in y-2..=y+2{
+                                    if x > 0 && x < LEVEL_SIZE_X-1 && y > 0 && y < LEVEL_SIZE_Y-1 {
+                                        self.level.set_tile(x, y, 0);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
