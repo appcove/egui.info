@@ -13,7 +13,8 @@ use egui::Rect;
 const POINTS_PER_TILE: f32 = 50.0;
 const LEVEL_SIZE_X: usize = 128;
 const LEVEL_SIZE_Y: usize = 128;
-const YELLOW_STROKE: Stroke = Stroke{width: 2.0, color: Color32::YELLOW};
+//const YELLOW_STROKE: Stroke = Stroke{width: 2.0, color: Color32::YELLOW};
+const STROKE_ENERGY_CELL: Stroke = Stroke{width: 0.5, color: Color32::WHITE};
 //const NO_STROKE: Stroke = Stroke{width: 0.0, color: Color32::TRANSPARENT};
 
 
@@ -24,7 +25,12 @@ struct Cell{
     v: f32,
 }
 
-// Create a struct to reperesent a level with 1024x1024 tiles
+impl Cell {
+    fn color(&self) -> Color32 {
+        Color32::from_rgb(0, 0, self.v.clamp(0.0, 255.0).trunc() as u8)
+    }
+}
+
 #[derive(Clone)]
 struct Level {
     tiles: Vec<u16>,
@@ -52,6 +58,11 @@ impl Level {
     fn add_cell(&mut self, x: usize, y: usize, v: f32) {
         self.energy.insert((x,y), Cell{x,y,v});
     }
+
+    fn get_cell(&self, x: usize, y: usize) -> Option<&Cell> {
+        self.energy.get(&(x,y))
+    }
+        
 }
 
 
@@ -86,6 +97,15 @@ impl DorpalApp {
         *self = Self::default();
     }
 
+    fn tick(&mut self){
+        for energy_cell in self.level.energy.values_mut() {
+            // TODO how to call the get_cell ?
+            if self.level.tiles[energy_cell.y*LEVEL_SIZE_X + energy_cell.x] & 0b00000000_00111111 == 0 {
+                energy_cell.v -= 0.2;
+            }
+        }
+        self.level.energy.retain(|_, cell| cell.v > 0.0);
+    }
 
     fn center_view_on_absolute_pos(&mut self, absolute_vec: Vec2, screen_rect:Rect) {
         self.view_anchor = Vec2::new(
@@ -166,6 +186,7 @@ impl epi::App for DorpalApp {
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
+        self.tick();
         
         // Looks better on 4k montior
         ctx.set_pixels_per_point(1.5);
@@ -219,9 +240,21 @@ impl epi::App for DorpalApp {
                         0 => Color32::BLACK,
                         1 => Color32::GRAY,
                         2 => Color32::DARK_RED,
+                        9 => Color32::GREEN,
                         _ => Color32::BLACK,
                     }
                 );  
+
+                // draw a circle at the center of the tile if there is an energy cell present
+                if let Some(energy_cell) = self.level.get_cell(x,y) {
+                    painter.circle(
+                        tile_rect_onscreen.center(), 
+                        POINTS_PER_TILE*0.505,
+                        energy_cell.color(),
+                        STROKE_ENERGY_CELL,
+                    );                
+                }
+                
             }
 
             let pointer = &ctx.input().pointer;
@@ -236,7 +269,19 @@ impl epi::App for DorpalApp {
                             self.level.set_tile(x, y, 1);
                         }
                         if pointer.secondary_down(){
-                            self.level.set_tile(x, y, 0);
+                            if self.level.get_tile(x, y) == 1 {
+                                self.level.set_tile(x, y, 0);
+                            }
+                        }
+                    }
+                    else if instate.key_down(Key::E) {
+                        if pointer.primary_down(){
+                            self.level.set_tile(x, y, 9);
+                        }
+                        if pointer.secondary_down(){
+                            if self.level.get_tile(x, y) == 9 {
+                                self.level.set_tile(x, y, 0);
+                            }
                         }
                     }
                     else if instate.key_down(Key::B)  {
@@ -259,6 +304,16 @@ impl epi::App for DorpalApp {
                             }
                         }
                     }
+                    else if pointer.primary_down(){
+                        let tile = self.level.get_tile(x,y);
+                        if tile == 0 || tile == 1 {
+                            self.level.add_cell(x, y, 64.0)
+                        }
+                    }
+                    else if pointer.secondary_down(){
+                        self.level.energy.remove(&(x,y));
+                    }
+
                 }
             }
         });
