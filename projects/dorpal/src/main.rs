@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -19,6 +20,41 @@ const STROKE_ENERGY_CELL: Stroke = Stroke{width: 0.5, color: Color32::WHITE};
 //const NO_STROKE: Stroke = Stroke{width: 0.0, color: Color32::TRANSPARENT};
 
 
+#[derive(PartialEq)]
+#[derive(Copy, Clone)]
+enum TileType {
+    Void,
+    Border,
+    Insulator,
+    Charger,
+    Lava,
+}
+
+
+#[derive(Copy, Clone)]
+struct Tile {
+    tiletype: TileType,
+}
+
+impl Default for Tile {
+    fn default() -> Self {
+        Self {
+            tiletype:TileType::Void,
+        }
+    }
+}
+
+
+
+impl Tile {
+    fn from_type(tiletype:TileType) -> Self{
+        Self {
+            tiletype:tiletype,
+        }
+    }
+    
+}
+
 #[derive(Clone)]
 struct Cell{
     x: usize,
@@ -34,25 +70,25 @@ impl Cell {
 
 #[derive(Clone)]
 struct Level {
-    tiles: Vec<u16>,
+    tiles: Vec<Tile>,
     energy: HashMap<(usize,usize),Cell>,
 }
 
 impl Default for Level {
     fn default() -> Self {
         Self {
-            tiles: vec![0; LEVEL_SIZE_X*LEVEL_SIZE_Y],
+            tiles: vec![Tile::default(); LEVEL_SIZE_X*LEVEL_SIZE_Y],
             energy: HashMap::new(),
         }
     }
 }
 
 impl Level {
-    fn get_tile(&self, x: usize, y: usize) -> u16 {
+    fn get_tile(&self, x: usize, y: usize) -> Tile {
         self.tiles[y*LEVEL_SIZE_X + x]
     }
 
-    fn set_tile(&mut self, x: usize, y: usize, value: u16) {
+    fn set_tile(&mut self, x: usize, y: usize, value: Tile) {
         self.tiles[y*LEVEL_SIZE_X + x] = value;
     }
 
@@ -106,12 +142,12 @@ impl Default for DorpalApp {
     fn default() -> Self {
         let mut level = Level::default();
         for x in 0..LEVEL_SIZE_X {
-            level.set_tile(x,0,2);
-            level.set_tile(x,LEVEL_SIZE_Y-1,2);
+            level.set_tile(x,0,Tile::from_type(TileType::Border));
+            level.set_tile(x,LEVEL_SIZE_Y-1,Tile::from_type(TileType::Border));
         }
         for y in 0..LEVEL_SIZE_Y {
-            level.set_tile(0,y,2);
-            level.set_tile(LEVEL_SIZE_X-1,y,2);
+            level.set_tile(0,y,Tile::from_type(TileType::Border));
+            level.set_tile(LEVEL_SIZE_X-1,y,Tile::from_type(TileType::Border));
         }
 
         Self {
@@ -130,11 +166,15 @@ impl DorpalApp {
     fn tick(&mut self){
         for energy_cell in self.level.energy.values_mut() {
             // TODO how to call the get_cell ?
-            if self.level.tiles[energy_cell.y*LEVEL_SIZE_X + energy_cell.x] & 0b00000000_00111111 == 0 {
-                energy_cell.v -= 0.5;
-            }
-            else if self.level.tiles[energy_cell.y*LEVEL_SIZE_X + energy_cell.x] & 0b00000000_00111111 == 9 {
-                energy_cell.v = (energy_cell.v+4.0).clamp(0.0, 255.0);
+             
+            match self.level.tiles[energy_cell.y*LEVEL_SIZE_X + energy_cell.x].tiletype {
+                TileType::Void => {
+                    energy_cell.v -= 0.5;
+                },
+                TileType::Charger => {
+                    energy_cell.v = (energy_cell.v+4.0).clamp(0.0, 255.0);
+                },
+                _ => (),
             }
         }
 
@@ -294,12 +334,12 @@ impl epi::App for DorpalApp {
                 painter.rect_filled(
                     tile_rect_onscreen, 
                     0.0,//POINTS_PER_TILE/4.0, 
-                    match tile & 0b00000000_00111111 {
-                        0 => Color32::BLACK,
-                        1 => Color32::GRAY,
-                        2 => Color32::DARK_RED,
-                        9 => Color32::GREEN,
-                        _ => Color32::BLACK,
+                    match tile.tiletype {
+                        TileType::Void => Color32::BLACK,
+                        TileType::Insulator => Color32::GRAY,
+                        TileType::Border => Color32::DARK_RED,
+                        TileType::Charger => Color32::GREEN,
+                        TileType::Lava => Color32::LIGHT_RED,
                     }
                 );  
 
@@ -324,21 +364,31 @@ impl epi::App for DorpalApp {
 
                     if instate.key_down(Key::Space) {
                         if pointer.primary_down(){
-                            self.level.set_tile(x, y, 1);
+                            self.level.set_tile(x, y, Tile::from_type(TileType::Insulator));
                         }
                         if pointer.secondary_down(){
-                            if self.level.get_tile(x, y) == 1 {
-                                self.level.set_tile(x, y, 0);
+                            if self.level.get_tile(x, y).tiletype == TileType::Insulator {
+                                self.level.set_tile(x, y, Tile::default());
+                            }
+                        }
+                    }
+                    if instate.key_down(Key::L) {
+                        if pointer.primary_down(){
+                            self.level.set_tile(x, y, Tile::from_type(TileType::Lava));
+                        }
+                        if pointer.secondary_down(){
+                            if self.level.get_tile(x, y).tiletype == TileType::Lava {
+                                self.level.set_tile(x, y, Tile::default());
                             }
                         }
                     }
                     else if instate.key_down(Key::E) {
                         if pointer.primary_down(){
-                            self.level.set_tile(x, y, 9);
+                            self.level.set_tile(x, y, Tile::from_type(TileType::Charger));
                         }
                         if pointer.secondary_down(){
-                            if self.level.get_tile(x, y) == 9 {
-                                self.level.set_tile(x, y, 0);
+                            if self.level.get_tile(x, y).tiletype == TileType::Charger {
+                                self.level.set_tile(x, y, Tile::default());
                             }
                         }
                     }
@@ -347,7 +397,7 @@ impl epi::App for DorpalApp {
                             for x in x-2..=x+2{
                                 for y in y-2..=y+2{
                                     if x > 0 && x < LEVEL_SIZE_X-1 && y > 0 && y < LEVEL_SIZE_Y-1 {
-                                        self.level.set_tile(x, y, 1);
+                                        self.level.set_tile(x, y, Tile::from_type(TileType::Insulator));
                                     }
                                 }
                             }
@@ -356,7 +406,7 @@ impl epi::App for DorpalApp {
                             for x in x-2..=x+2{
                                 for y in y-2..=y+2{
                                     if x > 0 && x < LEVEL_SIZE_X-1 && y > 0 && y < LEVEL_SIZE_Y-1 {
-                                        self.level.set_tile(x, y, 0);
+                                        self.level.set_tile(x, y, Tile::default());
                                     }
                                 }
                             }
@@ -364,12 +414,12 @@ impl epi::App for DorpalApp {
                     }
                     else if pointer.primary_down(){
                         let tile = self.level.get_tile(x,y);
-                        if tile == 0 || tile == 1 {
+                        if tile.tiletype == TileType::Void || tile.tiletype == TileType::Insulator {
                             if self.level.get_adjacent_cells(x, y).len() > 0 {
                                 self.level.add_cell(x, y, 4.0)
                             }
                         }
-                        if tile == 9 && ! self.level.energy.contains_key(&(x,y)) {
+                        if tile.tiletype == TileType::Charger && ! self.level.energy.contains_key(&(x,y)) {
                             self.level.add_cell(x, y, 4.0)
                         }
                     }
