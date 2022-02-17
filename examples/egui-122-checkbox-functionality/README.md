@@ -1,11 +1,11 @@
 
-# egui-112-checkbox-functionality
+# egui-122-checkbox-functionality
 
 This is an example of using checkboxes to change the color of a circle
 
 ## Source
-- [src/main.rs]({{ site.codeurl }}/examples/egui-112-checkbox-functionality/src/main.rs)
-- [Project Directory]({{ site.codeurl }}/examples/egui-112-checkbox-functionality)
+- [src/main.rs]({{ site.codeurl }}/examples/egui-122-checkbox-functionality/src/main.rs)
+- [Project Directory]({{ site.codeurl }}/examples/egui-122-checkbox-functionality)
 
 
 ## Screenshots

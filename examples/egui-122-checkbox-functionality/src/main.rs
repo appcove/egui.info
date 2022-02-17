@@ -28,7 +28,7 @@ impl Default for ExampleApp {
 
 impl epi::App for ExampleApp {
     fn name(&self) -> &str {
-        "egui-112-checkbox-functionality"
+        "egui-122-checkbox-functionality"
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
