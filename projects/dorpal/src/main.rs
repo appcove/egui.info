@@ -28,6 +28,8 @@ enum TileType {
     Insulator,
     Charger,
     Lava,
+    PortalOut,
+    PortalIn,
 }
 
 
@@ -172,6 +174,9 @@ impl DorpalApp {
                     energy_cell.v -= 0.5;
                 },
                 TileType::Charger => {
+                    energy_cell.v = (energy_cell.v+4.0).clamp(0.0, 255.0);
+                },
+                TileType::PortalIn => {
                     energy_cell.v = (energy_cell.v+4.0).clamp(0.0, 255.0);
                 },
                 _ => (),
@@ -339,7 +344,9 @@ impl epi::App for DorpalApp {
                         TileType::Insulator => Color32::GRAY,
                         TileType::Border => Color32::DARK_RED,
                         TileType::Charger => Color32::GREEN,
-                        TileType::Lava => Color32::LIGHT_RED,
+                        TileType::Lava => Color32::from_rgb(255, 140, 0),
+                        TileType::PortalIn => Color32::from_rgb(0, 200, 200),
+                        TileType::PortalOut => Color32::GOLD,
                     }
                 );  
 
@@ -382,6 +389,14 @@ impl epi::App for DorpalApp {
                             }
                         }
                     }
+                    if instate.key_down(Key::P) {
+                        if pointer.primary_down(){
+                            self.level.set_tile(x, y, Tile::from_type(TileType::PortalIn));
+                        }
+                        if pointer.secondary_down(){
+                            self.level.set_tile(x, y, Tile::from_type(TileType::PortalOut));
+                        }
+                    }
                     else if instate.key_down(Key::E) {
                         if pointer.primary_down(){
                             self.level.set_tile(x, y, Tile::from_type(TileType::Charger));
@@ -414,12 +429,12 @@ impl epi::App for DorpalApp {
                     }
                     else if pointer.primary_down(){
                         let tile = self.level.get_tile(x,y);
-                        if tile.tiletype == TileType::Void || tile.tiletype == TileType::Insulator {
+                        if tile.tiletype == TileType::Void || tile.tiletype == TileType::Insulator || tile.tiletype == TileType::Charger{
                             if self.level.get_adjacent_cells(x, y).len() > 0 {
                                 self.level.add_cell(x, y, 4.0)
                             }
                         }
-                        if tile.tiletype == TileType::Charger && ! self.level.energy.contains_key(&(x,y)) {
+                        if tile.tiletype == TileType::PortalIn && ! self.level.energy.contains_key(&(x,y)) {
                             self.level.add_cell(x, y, 4.0)
                         }
                     }
