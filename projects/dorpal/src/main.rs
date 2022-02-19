@@ -1,3 +1,4 @@
+use std::any;
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -394,7 +395,19 @@ impl epi::App for DorpalApp {
                             self.level.set_tile(x, y, Tile::from_type(TileType::PortalIn));
                         }
                         if pointer.secondary_down(){
+                            if self.level.get_tile(x, y).tiletype == TileType::PortalIn {
+                                self.level.set_tile(x, y, Tile::default())
+                            }
+                        }
+                    }
+                    if instate.key_down(Key::O) {
+                        if pointer.primary_down(){
                             self.level.set_tile(x, y, Tile::from_type(TileType::PortalOut));
+                        }
+                        if pointer.secondary_down(){
+                            if self.level.get_tile(x, y).tiletype == TileType::PortalOut {
+                                self.level.set_tile(x, y, Tile::default())
+                            }
                         }
                     }
                     else if instate.key_down(Key::E) {
@@ -429,7 +442,7 @@ impl epi::App for DorpalApp {
                     }
                     else if pointer.primary_down(){
                         let tile = self.level.get_tile(x,y);
-                        if tile.tiletype == TileType::Void || tile.tiletype == TileType::Insulator || tile.tiletype == TileType::Charger{
+                        if tile.tiletype == TileType::Void || tile.tiletype == TileType::Insulator || tile.tiletype == TileType::PortalOut || tile.tiletype == TileType::Charger { 
                             if self.level.get_adjacent_cells(x, y).len() > 0 {
                                 self.level.add_cell(x, y, 4.0)
                             }
