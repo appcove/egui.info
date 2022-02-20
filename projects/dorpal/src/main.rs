@@ -14,6 +14,7 @@ use egui::Vec2;
 use egui::Rect;
 
 const POINTS_PER_TILE: f32 = 50.0;
+const FUZE_NUKE_THRESHOLD: u16 = 100;
 const LEVEL_SIZE_X: usize = 128;
 const LEVEL_SIZE_Y: usize = 128;
 //const YELLOW_STROKE: Stroke = Stroke{width: 2.0, color: Color32::YELLOW};
@@ -63,11 +64,51 @@ struct Cell{
     x: usize,
     y: usize,
     v: f32,
+    maxv: f32,
+    starttick: f32,
+    fuze: u16,
 }
 
 impl Cell {
+    fn new(x: usize, y: usize) -> Self {
+        Self {
+            x: x,
+            y: y,
+            v: 1.0,  //no dying
+            maxv: 1024.0,
+            starttick: 0.0,
+            fuze: 0,
+        }
+    }
+
+    fn radius(&self) -> f32 {
+        POINTS_PER_TILE*0.25+POINTS_PER_TILE/(FUZE_NUKE_THRESHOLD as f32)*0.25*self.fuze as f32
+    }
+
     fn color(&self) -> Color32 {
-        Color32::from_rgb(0, 0, self.v.clamp(0.0, 255.0).trunc() as u8)
+        if self.fuze > 0 {
+            if self.fuze % 4 == 0 {
+                return Color32::BLACK;
+            }
+            else {
+                return Color32::RED;
+            }
+        }
+        if self.v < 256.0 {
+            return Color32::from_rgb(0, 0, self.v as u8);
+        }
+        else if self.v < 512.0 {
+            return Color32::from_rgb(0, (self.v - 256.0) as u8, 255);
+        }
+        else if self.v < 768.0 {
+            return Color32::from_rgb((self.v - 512.0) as u8, 255, 255);
+        }
+        else if self.v < 1024.0 {
+            return Color32::from_rgb(255, (1024.0 - self.v) as u8, (1024.0 - self.v) as u8);
+        }
+        else {
+            return Color32::from_rgb(255, 0, 0);
+        }
     }
 }
 
@@ -95,13 +136,31 @@ impl Level {
         self.tiles[y*LEVEL_SIZE_X + x] = value;
     }
 
-    fn add_cell(&mut self, x: usize, y: usize, v: f32) {
-        self.energy.insert((x,y), Cell{x,y,v});
+    fn add_cell(&mut self, x: usize, y: usize) {
+        self.energy.insert((x,y), Cell::new(x,y));
     }
 
     fn get_cell(&self, x: usize, y: usize) -> Option<&Cell> {
         self.energy.get(&(x,y))
     }
+
+    fn get_nuke_cells(&self, x: usize, y: usize) -> Vec<(usize,usize)> {
+        let mut cells = Vec::new();
+
+        for (nx,ny) in self.energy.keys() {
+            let nx = *nx as i32;
+            let ny = *ny as i32;
+            let x = x as i32;
+            let y = y as i32;
+
+            if (nx-x).abs() <= 2 && (ny-y).abs() <= 2 {
+                cells.push((nx as usize, ny as usize));
+            }
+
+        }
+        return cells;
+    }
+
 
     fn get_adjacent_cells(&self, x: usize, y: usize) -> Vec<(usize,usize)> {
         let mut cells = Vec::new();
@@ -138,6 +197,7 @@ impl Level {
 struct DorpalApp {
     view_anchor: Vec2,
     level: Level,
+    ticks: f32,
 }
 
 
@@ -155,8 +215,9 @@ impl Default for DorpalApp {
 
         Self {
             //view_center: Vec2::new((LEVEL_SIZE_X as f32)*POINTS_PER_TILE*0.5, (LEVEL_SIZE_Y as f32)*POINTS_PER_TILE*0.5),
-            view_anchor: Vec2::new(0.0, 0.0),
+            view_anchor: Vec2::new(0.0, -25.0),
             level: level,
+            ticks: 0.0,
         }
     }
 }
@@ -167,46 +228,67 @@ impl DorpalApp {
     }
 
     fn tick(&mut self){
+        self.ticks += 1.0;
+
         for energy_cell in self.level.energy.values_mut() {
             // TODO how to call the get_cell ?
-             
+            
             match self.level.tiles[energy_cell.y*LEVEL_SIZE_X + energy_cell.x].tiletype {
                 TileType::Void => {
                     energy_cell.v -= 0.5;
                 },
                 TileType::Charger => {
-                    energy_cell.v = (energy_cell.v+4.0).clamp(0.0, 255.0);
+                    energy_cell.v += 4.0;
                 },
                 TileType::PortalIn => {
-                    energy_cell.v = (energy_cell.v+4.0).clamp(0.0, 255.0);
+                    energy_cell.v = (energy_cell.v+8.0).clamp(0.0, 768.0);
                 },
                 _ => (),
+            }
+
+            if energy_cell.v > energy_cell.maxv {
+                energy_cell.fuze += 1;
+            }
+            else if energy_cell.fuze > 0 {
+                energy_cell.fuze -= 1;
             }
         }
 
         self.level.energy.retain(|_,cell| { cell.v > 0.0 });
 
         let mut adjustment = Vec::<(usize, usize, f32)>::new();
+        let mut nuke = HashSet::<(usize, usize)>::new();
 
         for (x,y) in self.level.energy.keys() {
             let cur_cell = self.level.energy.get(&(*x,*y)).unwrap();
             let adj_cells = self.level.get_adjacent_cells(*x,*y);
-            let length = adj_cells.len() as f32;
-            if length > 0.0 {
-                for (nx,ny) in adj_cells {
-                    if let Some(adj_cell) = self.level.get_cell(nx,ny) {
-                        if adj_cell.v < cur_cell.v {
-                            let ed = ((cur_cell.v - adj_cell.v)/5.0).max(1.0);
-                            adjustment.push((*x,*y,-ed));
-                            adjustment.push((nx,ny,ed));
-                        }
+
+            if cur_cell.fuze > FUZE_NUKE_THRESHOLD {
+                nuke.insert((*x,*y));
+                for (nx,ny) in self.level.get_nuke_cells(*x, *y) {
+                    nuke.insert((nx,ny));
+                }
+                continue;
+            }
+
+            for (nx,ny) in adj_cells {
+                if let Some(adj_cell) = self.level.get_cell(nx,ny) {
+                    if cur_cell.v > adj_cell.v {
+                        let df = cur_cell.v - adj_cell.v;
+                        let ed = df/20.0;
+                        adjustment.push((*x,*y,-ed));
+                        adjustment.push((nx,ny,ed));
                     }
                 }
             }
         }
 
+        self.level.energy.retain(|(x,y),cell| { !nuke.contains(&(*x,*y)) });
+
         for (x,y,v) in adjustment {
-            self.level.energy.get_mut(&(x,y)).unwrap().v += v;
+            if self.level.energy.contains_key(&(x,y)) {
+                self.level.energy.get_mut(&(x,y)).unwrap().v += v;
+            }
         }
 
     }
@@ -303,6 +385,7 @@ impl epi::App for DorpalApp {
 
         if instate.key_down(Key::W) {
             self.view_anchor.y -= 12.2;
+            self.view_anchor.y = self.view_anchor.y.max(-25.0);
         }
 
         if instate.key_down(Key::S) {
@@ -311,6 +394,7 @@ impl epi::App for DorpalApp {
 
         if instate.key_down(Key::A) {
             self.view_anchor.x -= 12.2;
+            self.view_anchor.x = self.view_anchor.x.max(0.0);
         }
 
         if instate.key_down(Key::D) {
@@ -332,6 +416,8 @@ impl epi::App for DorpalApp {
     
             let painter = ui.painter_at(Rect::everything_below(25.0));
             let view_rect_onscreen = painter.clip_rect();
+
+            
 
             for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
                 let tile = self.level.get_tile(x, y);
@@ -355,7 +441,7 @@ impl epi::App for DorpalApp {
                 if let Some(energy_cell) = self.level.get_cell(x,y) {
                     painter.circle(
                         tile_rect_onscreen.center(), 
-                        POINTS_PER_TILE*0.505,
+                        energy_cell.radius(),
                         energy_cell.color(),
                         STROKE_ENERGY_CELL,
                     );                
@@ -440,15 +526,22 @@ impl epi::App for DorpalApp {
                             }
                         }
                     }
-                    else if pointer.primary_down(){
+                    else if instate.keys_down.len() > 0 {
+
+                    }
+                    else if pointer.primary_down() {
                         let tile = self.level.get_tile(x,y);
-                        if tile.tiletype == TileType::Void || tile.tiletype == TileType::Insulator || tile.tiletype == TileType::PortalOut || tile.tiletype == TileType::Charger { 
-                            if self.level.get_adjacent_cells(x, y).len() > 0 {
-                                self.level.add_cell(x, y, 4.0)
+                        if (tile.tiletype == TileType::Void || tile.tiletype == TileType::Insulator || tile.tiletype == TileType::PortalOut || tile.tiletype == TileType::Charger) && ! self.level.energy.contains_key(&(x,y)) {
+                            let mut maxenergy:f32 = 0.0;
+                            for (nx,ny ) in self.level.get_adjacent_cells(x, y).iter() {
+                                maxenergy = maxenergy.max(self.level.energy[&(*nx,*ny)].v);
+                            }
+                            if maxenergy >= 64.0 {
+                                self.level.add_cell(x, y)
                             }
                         }
                         if tile.tiletype == TileType::PortalIn && ! self.level.energy.contains_key(&(x,y)) {
-                            self.level.add_cell(x, y, 4.0)
+                            self.level.add_cell(x, y)
                         }
                     }
                     else if pointer.secondary_down(){
