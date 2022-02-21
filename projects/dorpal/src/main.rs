@@ -14,6 +14,11 @@ use egui::Pos2;
 use egui::Vec2;
 use egui::Rect;
 
+const ENERGY_RATIO_TRANSFERED_ON_REMOVAL: f32 = 0.5;
+const TRANSFER_RATIO_OF_DIFFERENCE_PER_TICK: f32 = 0.1;
+const DEDUCT_PER_TICK_OVER_VOID : f32 = 1.0;
+const ADD_PER_TICK_OVER_CHARGER : f32 = 4.0;
+const ADD_PER_TICK_OVER_PORTAL : f32 = 8.0;
 const POINTS_PER_TILE: f32 = 50.0;
 const FUZE_NUKE_THRESHOLD: u16 = 200;
 const LEVEL_SIZE_X: usize = 128;
@@ -75,7 +80,7 @@ impl Cell {
         Self {
             x: x,
             y: y,
-            v: 1.0,  //no dying
+            v: DEDUCT_PER_TICK_OVER_VOID*2.0,  //no dying
             maxv: 1024.0,
             starttick: 0.0,
             fuze: 0,
@@ -183,7 +188,7 @@ impl Level {
     fn rem_cell(&mut self, x: usize, y: usize) {
         if let Some(cell) = self.get_cell(x, y) {
             let adj_cells = self.get_adjacent_cells(x, y);
-            let add_v = cell.v / adj_cells.len() as f32;
+            let add_v = ENERGY_RATIO_TRANSFERED_ON_REMOVAL * cell.v / adj_cells.len() as f32;
             for (nx,ny) in adj_cells {
                 self.energy.get_mut(&(nx,ny)).unwrap().v += add_v;
             }
@@ -199,6 +204,7 @@ struct DorpalApp {
     view_anchor: Vec2,
     level: Level,
     ticks: f32,
+    clicked: bool,
 }
 
 
@@ -219,6 +225,7 @@ impl Default for DorpalApp {
             view_anchor: Vec2::new(0.0, -25.0),
             level: level,
             ticks: 0.0,
+            clicked: false,
         }
     }
 }
@@ -238,13 +245,13 @@ impl DorpalApp {
 
             match self.level.tiles[energy_cell.y*LEVEL_SIZE_X + energy_cell.x].tiletype {
                 TileType::Void => {
-                    energy_cell.v -= 0.5;
+                    energy_cell.v -= DEDUCT_PER_TICK_OVER_VOID;
                 },
                 TileType::Charger => {
-                    energy_cell.v += 4.0;
+                    energy_cell.v += ADD_PER_TICK_OVER_CHARGER;
                 },
                 TileType::PortalIn => {
-                    energy_cell.v = (energy_cell.v+8.0).clamp(0.0, 768.0);
+                    energy_cell.v = (energy_cell.v+ADD_PER_TICK_OVER_PORTAL).clamp(0.0, 768.0);
                 },
                 _ => (),
             }
@@ -278,7 +285,7 @@ impl DorpalApp {
                 if let Some(adj_cell) = self.level.get_cell(nx,ny) {
                     if cur_cell.v > adj_cell.v {
                         let df = cur_cell.v - adj_cell.v;
-                        let ed = df/20.0;
+                        let ed = df*TRANSFER_RATIO_OF_DIFFERENCE_PER_TICK;
                         adjustment.push((*x,*y,-ed));
                         adjustment.push((nx,ny,ed));
                     }
@@ -543,24 +550,33 @@ impl epi::App for DorpalApp {
 
                     }
                     else if pointer.primary_down() {
-                        let tile = self.level.get_tile(x,y);
-                        if (tile.tiletype == TileType::Void || tile.tiletype == TileType::Insulator || tile.tiletype == TileType::PortalOut || tile.tiletype == TileType::Charger) && ! self.level.energy.contains_key(&(x,y)) {
-                            let mut maxenergy:f32 = 0.0;
-                            for (nx,ny ) in self.level.get_adjacent_cells(x, y).iter() {
-                                maxenergy = maxenergy.max(self.level.energy[&(*nx,*ny)].v);
-                            }
-                            if maxenergy >= 64.0 {
-                                self.level.add_cell(x, y)
-                            }
-                        }
-                        if tile.tiletype == TileType::PortalIn && ! self.level.energy.contains_key(&(x,y)) {
-                            self.level.add_cell(x, y)
-                        }
-                    }
-                    else if pointer.secondary_down(){
-                        self.level.rem_cell(x, y);
-                    }
+                        if self.clicked == false {
+                            self.clicked = true;
+                            let tile = self.level.get_tile(x,y);
 
+                            if self.level.energy.contains_key(&(x,y)) {
+                                self.level.rem_cell(x, y)
+                            }
+                            else {
+                                if tile.tiletype == TileType::Void || tile.tiletype == TileType::Insulator || tile.tiletype == TileType::PortalOut || tile.tiletype == TileType::Charger {
+                                    let mut maxenergy:f32 = 0.0;
+                                    for (nx,ny ) in self.level.get_adjacent_cells(x, y).iter() {
+                                        maxenergy = maxenergy.max(self.level.energy[&(*nx,*ny)].v);
+                                    }
+                                    if maxenergy >= 64.0 {
+                                        self.level.add_cell(x, y)
+                                    }
+                                }
+                                if tile.tiletype == TileType::PortalIn && ! self.level.energy.contains_key(&(x,y)) {
+                                    self.level.add_cell(x, y)
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        self.clicked = false;
+                    }
+                    
                 }
             }
         });
