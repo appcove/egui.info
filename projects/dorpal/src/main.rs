@@ -2,6 +2,7 @@ use std::any;
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::f32::consts::PI;
 
 use rand;
 use eframe::epi;
@@ -14,7 +15,7 @@ use egui::Vec2;
 use egui::Rect;
 
 const POINTS_PER_TILE: f32 = 50.0;
-const FUZE_NUKE_THRESHOLD: u16 = 100;
+const FUZE_NUKE_THRESHOLD: u16 = 200;
 const LEVEL_SIZE_X: usize = 128;
 const LEVEL_SIZE_Y: usize = 128;
 //const YELLOW_STROKE: Stroke = Stroke{width: 2.0, color: Color32::YELLOW};
@@ -88,7 +89,7 @@ impl Cell {
     fn color(&self) -> Color32 {
         if self.fuze > 0 {
             if self.fuze % 4 == 0 {
-                return Color32::BLACK;
+                return Color32::RED;
             }
             else {
                 return Color32::RED;
@@ -233,6 +234,8 @@ impl DorpalApp {
         for energy_cell in self.level.energy.values_mut() {
             // TODO how to call the get_cell ?
             
+            energy_cell.starttick += energy_cell.v/1024.0;
+
             match self.level.tiles[energy_cell.y*LEVEL_SIZE_X + energy_cell.x].tiletype {
                 TileType::Void => {
                     energy_cell.v -= 0.5;
@@ -391,7 +394,7 @@ impl epi::App for DorpalApp {
         if instate.key_down(Key::S) {
             self.view_anchor.y += 12.2;
         }
-
+    
         if instate.key_down(Key::A) {
             self.view_anchor.x -= 12.2;
             self.view_anchor.x = self.view_anchor.x.max(0.0);
@@ -436,15 +439,25 @@ impl epi::App for DorpalApp {
                         TileType::PortalOut => Color32::GOLD,
                     }
                 );  
+            }
+
+            for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
+                let tile_rect_onscreen = self.integral_to_rect_onscreen(x,y);
 
                 // draw a circle at the center of the tile if there is an energy cell present
                 if let Some(energy_cell) = self.level.get_cell(x,y) {
+                    
+
+                    for a in [PI*2.0/3.0*0.0, PI*2.0/3.0*1.0, PI*2.0/3.0*2.0].iter() {
+                        painter.circle(tile_rect_onscreen.center() + Vec2::angled(energy_cell.starttick/10.0+*a)*energy_cell.radius(), POINTS_PER_TILE/6.0, energy_cell.color(), STROKE_ENERGY_CELL);                    
+                    }
                     painter.circle(
                         tile_rect_onscreen.center(), 
                         energy_cell.radius(),
                         energy_cell.color(),
                         STROKE_ENERGY_CELL,
-                    );                
+                    );      
+
                 }
                 
             }
