@@ -3,11 +3,14 @@ use eframe::egui;
 use egui::color::Color32;
 use egui::epaint::Stroke;
 use rand::Rng;
+use crate::egui::Rect;
+use crate::egui::Pos2;
 
 struct ExampleApp {
     x: f32,
     y: f32,
     c: i32,
+    screen_rect: Rect,
 }
 
 impl Default for ExampleApp {
@@ -16,6 +19,7 @@ impl Default for ExampleApp {
             x: 250.0,
             y: 250.0,
             c: 0,
+            screen_rect: Rect{min: Pos2{x: 0.0, y: 0.0}, max: Pos2{x: 1000.0, y: 700.0}},
         }
     }
 }
@@ -32,8 +36,8 @@ impl epi::App for ExampleApp {
         if let Some(mousepos) = pointer.hover_pos() {
             if pointer.any_click() {
                 if mousepos.distance(egui::Pos2{x:self.x,y:self.y}) < 50.0 {
-                    self.x = rand::thread_rng().gen_range(50.0..400.0);
-                    self.y = rand::thread_rng().gen_range(50.0..400.0);
+                    self.x = rand::thread_rng().gen_range(self.screen_rect.min.x..self.screen_rect.max.x);
+                    self.y = rand::thread_rng().gen_range(self.screen_rect.min.y..self.screen_rect.max.y);
                     self.c += 1;
                 }
             }
@@ -46,7 +50,8 @@ impl epi::App for ExampleApp {
             }            
             ui.heading(self.c.to_string());
             let painter = ui.painter();
-
+            self.screen_rect = painter.clip_rect();
+            
             painter.circle (
                 egui::Pos2{x:self.x,y:self.y}, 
                 50.0, 
