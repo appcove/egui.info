@@ -20,6 +20,7 @@ struct ExampleApp {
     x: f32,
     y: f32,
     c: i32,
+    screen_rect: Rect,
 }
 ```
 
@@ -32,6 +33,7 @@ impl Default for ExampleApp {
             x: 250.0,
             y: 250.0,
             c: 0,
+            screen_rect: Rect{min: Pos2{x: 0.0, y: 0.0}, max: Pos2{x: 1000.0, y: 700.0}},
         }
     }
 }
@@ -51,7 +53,7 @@ painter.circle (
 );
 ```
 
-Every time the program updates, it checks if the circle was clicked by checking if the mouse is down, and if the mousepos is 50 px away from the circle's x and y variables. If the circle was clicked, it sets the circle's x and y to random numbers from 50 to 400, as well as adding one to the c variable (the score).
+Every time the program updates, it checks if the circle was clicked by checking if the mouse is down, and if the mousepos is 50 px away from the circle's x and y variables. If the circle was clicked, it sets the circle's x and y to random numbers inside the window, as well as adding one to the c variable (the score).
 
 ```rust
 fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
@@ -61,8 +63,8 @@ fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
     if let Some(mousepos) = pointer.hover_pos() {
         if pointer.any_click() {
             if mousepos.distance(egui::Pos2{x:self.x,y:self.y}) < 50.0 {
-                self.x = rand::thread_rng().gen_range(50.0..400.0);
-                self.y = rand::thread_rng().gen_range(50.0..400.0);
+                self.x = rand::thread_rng().gen_range(self.screen_rect.min.x..self.screen_rect.max.x);
+                self.y = rand::thread_rng().gen_range(self.screen_rect.min.y..self.screen_rect.max.y);
                 self.c += 1;
             }
         }
