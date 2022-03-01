@@ -23,7 +23,16 @@ impl ExampleApp {
                 if ctx.input().key_down(egui::Key::ArrowDown) {
                     self.player.y += 8.0;
                 }
-                    },
+                
+                if ctx.input().key_pressed(egui::Key::P) {
+                    self.gamestate = GameState::Pause;
+                }
+            },
+            GameState::Pause => {
+                if ctx.input().key_pressed(egui::Key::P) {
+                    self.gamestate = GameState::Playing;
+                }
+            },
             _ => {
              
             }
