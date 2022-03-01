@@ -11,8 +11,10 @@ use rand::Rng;
 
 mod keyboard;
 mod fallingball;
+mod player;
 
 use fallingball::FallingBall;
+use player::Player;
 
 // Struct to hold a falling ball and it's velocity
 
@@ -27,7 +29,7 @@ enum GameState {
 
 struct ExampleApp {
     balls: Vec<FallingBall>,
-    player: Pos2,
+    player: Player,
     screen_rect: Rect,
     tick_count: u32,
     doreset: bool,
@@ -38,7 +40,7 @@ impl Default for ExampleApp {
     fn default() -> Self {
         Self {
             balls: Vec::new(),
-            player: Pos2::new(500.0, 350.0),
+            player: Player::new(Pos2::new(300.0, 300.0)),
             screen_rect: Rect{min: Pos2{x: 0.0, y: 0.0}, max: Pos2{x: 1000.0, y: 700.0}},
             tick_count: 0,
             doreset: false,
@@ -71,7 +73,7 @@ impl ExampleApp {
         for ball in &mut self.balls {
             ball.tick();
 
-            if ball.pos.distance(self.player) < ball.radius + 15.0 {
+            if ball.pos.distance(self.player.pos) < ball.radius + 15.0 {
                 self.gamestate = GameState::GameOver;
             }
         }
@@ -82,18 +84,7 @@ impl ExampleApp {
             self.add_ball();
         }
 
-        if self.player.x < self.screen_rect.min.x {
-            self.player.x = self.screen_rect.min.x;
-        }
-        if self.player.x > self.screen_rect.max.x {
-            self.player.x = self.screen_rect.max.x;
-        }
-        if self.player.y < self.screen_rect.min.y {
-            self.player.y = self.screen_rect.min.y;
-        }
-        if self.player.y > self.screen_rect.max.y {
-            self.player.y = self.screen_rect.max.y;
-        }
+        self.player.tick(&self.screen_rect);
 
     }
 }
@@ -133,7 +124,7 @@ impl epi::App for ExampleApp {
                 painter.circle_filled(ball.pos, ball.radius, Color32::WHITE);
             }
 
-            painter.circle_filled(self.player, 15.0, Color32::GREEN);
+            painter.circle_filled(self.player.pos, self.player.radius, Color32::GREEN);
 
 
             match self.gamestate {

@@ -12,18 +12,18 @@ impl ExampleApp {
         match self.gamestate {
             GameState::Playing => {
                 if ctx.input().key_down(egui::Key::ArrowLeft){
-                    self.player.x -= 8.0;
+                    self.player.accel(-1.0, 0.0);
                 }
                 if ctx.input().key_down(egui::Key::ArrowRight){
-                    self.player.x += 8.0;
+                    self.player.accel(1.0, 0.0);
                 }
                 if ctx.input().key_down(egui::Key::ArrowUp) {
-                    self.player.y -= 8.0;
+                    self.player.accel(0.0, -1.0);
                 }
                 if ctx.input().key_down(egui::Key::ArrowDown) {
-                    self.player.y += 8.0;
+                    self.player.accel(0.0, 1.0);
                 }
-                
+
                 if ctx.input().key_pressed(egui::Key::P) {
                     self.gamestate = GameState::Pause;
                 }
