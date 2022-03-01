@@ -4,6 +4,7 @@ use crate::egui::Pos2;
 use crate::egui::Vec2;
 use crate::egui::Painter;
 use crate::egui::Color32;
+use crate::egui::Stroke;
 
 // Struct to hold a falling ball and it's velocity
 pub struct Player {
@@ -11,6 +12,7 @@ pub struct Player {
     pub vel: Vec2,
     pub radius: f32,
     pub energy: i32,
+    pub deathradius: i32,
 }
 
 const ACCEL_PER_TICK: f32 = 1.0;
@@ -23,6 +25,7 @@ impl Player {
             vel: Vec2::new(0.0, 0.0),
             radius: 15.0,
             energy: 100,
+            deathradius: 0,
         }
     }
 
@@ -54,6 +57,9 @@ impl Player {
     }
 
     pub fn paint(&self, painter: &Painter) {
+        if self.deathradius < 0 {
+            painter.circle_stroke(self.pos, -self.deathradius as f32, Stroke::new(2.0, Color32::RED));
+        }
         painter.circle_filled(self.pos, self.radius, Color32::GREEN);
     }
 }

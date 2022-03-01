@@ -93,6 +93,18 @@ impl ExampleApp {
 
         self.player.tick(&self.screen_rect);
 
+        if self.player.deathradius > 0{
+            for ball in &mut self.balls {
+                if ball.pos.distance(self.player.pos) < ball.radius + self.player.deathradius as f32 {
+                    ball.energy = 0;
+                }
+            }
+            self.player.deathradius = 0;
+        }
+        else if self.player.deathradius < 0 {
+            self.player.energy -= 1;
+        }
+
 
         let len = self.balls.len();
         self.balls.retain(|ball| { ball.pos.y < self.screen_rect.max.y + ball.radius && ball.energy > 0 });

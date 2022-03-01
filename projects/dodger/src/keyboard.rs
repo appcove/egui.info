@@ -24,6 +24,13 @@ impl ExampleApp {
                     self.player.accel(0.0, 1.0);
                 }
 
+                if ctx.input().key_down(egui::Key::Space) {
+                    self.player.deathradius -= 5;
+                }
+                else if self.player.deathradius < 0 {
+                    self.player.deathradius = -self.player.deathradius;
+                }
+
                 if ctx.input().key_pressed(egui::Key::P) {
                     self.gamestate = GameState::Pause;
                 }

@@ -25,7 +25,7 @@ pub struct FallingBall {
 
 impl FallingBall {
     pub fn new(screen_rec: &Rect) -> Self {
-        let n = rand::thread_rng().gen_range(0i32..50);
+        let n = rand::thread_rng().gen_range(0i32..40);
         let pos = Pos2::new(rand::thread_rng().gen_range(screen_rec.min.x..screen_rec.max.x), -25.0);
         let vel = Vec2::new(rand::thread_rng().gen_range(-2.0..2.0), 0.0);
         let radius = screen_rec.width() / 80.0;
@@ -36,7 +36,7 @@ impl FallingBall {
                 vel,
                 radius,
                 ball_type: BallType::Health,
-                energy: 100,
+                energy: 200,
             }
         }
         else {
@@ -57,7 +57,7 @@ impl FallingBall {
 
     pub fn paint(&self, painter: &Painter) {
         match self.ball_type {
-            BallType::Bad => painter.circle_filled(self.pos, self.radius, Color32::WHITE),
+            BallType::Bad => painter.circle_filled(self.pos, self.radius, Color32::GRAY),
             BallType::Health => painter.circle_filled(self.pos, self.radius, Color32::BLUE),
         }
        
