@@ -16,22 +16,33 @@ use fallingball::FallingBall;
 
 // Struct to hold a falling ball and it's velocity
 
+#[derive(PartialEq)]
+enum GameState {
+    Pending,
+    Playing,
+    Pause,
+    GameOver,
+}
+
+
 struct ExampleApp {
     balls: Vec<FallingBall>,
-    platform: Pos2,
+    player: Pos2,
     screen_rect: Rect,
     tick_count: u32,
     doreset: bool,
+    gamestate: GameState,
 }
 
 impl Default for ExampleApp {
     fn default() -> Self {
         Self {
             balls: Vec::new(),
-            platform: Pos2::new(500.0, 350.0),
+            player: Pos2::new(500.0, 350.0),
             screen_rect: Rect{min: Pos2{x: 0.0, y: 0.0}, max: Pos2{x: 1000.0, y: 700.0}},
             tick_count: 0,
             doreset: false,
+            gamestate: GameState::Pending,
         }
     }
 }
@@ -53,10 +64,9 @@ impl ExampleApp {
         }
 
         for ball in &mut self.balls {
-            ball.pos += ball.vel;
-            ball.vel.y += 0.05;
+            ball.tick();
 
-            if ball.pos.distance(self.platform) < ball.radius + 15.0 {
+            if ball.pos.distance(self.player) < ball.radius + 15.0 {
                 self.doreset = true;
             }
         }
@@ -80,7 +90,10 @@ impl epi::App for ExampleApp {
 
         // Looks better on 4k montior
         ctx.set_pixels_per_point(1.0);
-        self.tick();
+        
+        if self.gamestate == GameState::Playing {
+            self.tick();
+        }
 
         if self.doreset {
             self.reset();
@@ -88,24 +101,28 @@ impl epi::App for ExampleApp {
             return;
         }
 
+        
+
         self.keyboard_input(ctx, frame);
 
-        if self.platform.x < self.screen_rect.min.x {
-            self.platform.x = self.screen_rect.min.x;
+        if self.player.x < self.screen_rect.min.x {
+            self.player.x = self.screen_rect.min.x;
         }
-        if self.platform.x > self.screen_rect.max.x {
-            self.platform.x = self.screen_rect.max.x;
+        if self.player.x > self.screen_rect.max.x {
+            self.player.x = self.screen_rect.max.x;
         }
-        if self.platform.y < self.screen_rect.min.y {
-            self.platform.y = self.screen_rect.min.y;
+        if self.player.y < self.screen_rect.min.y {
+            self.player.y = self.screen_rect.min.y;
         }
-        if self.platform.y > self.screen_rect.max.y {
-            self.platform.y = self.screen_rect.max.y;
+        if self.player.y > self.screen_rect.max.y {
+            self.player.y = self.screen_rect.max.y;
         }
 
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let painter = ui.painter();
+
+            painter.rect_filled(self.screen_rect, 0.0, Color32::BLACK);
 
             // Update this in case window size changed -- for next frame
             self.screen_rect = painter.clip_rect();
@@ -114,7 +131,7 @@ impl epi::App for ExampleApp {
                 painter.circle_filled(ball.pos, ball.radius, Color32::WHITE);
             }
 
-            painter.circle_filled(self.platform, 15.0, Color32::GREEN);
+            painter.circle_filled(self.player, 15.0, Color32::GREEN);
 
             ui.monospace("Dodge the balls with the left and right arrow!");
             ui.monospace(format!("Score: {} x {}", self.tick_count, self.balls.len()));
@@ -134,6 +151,8 @@ fn main() {
 
     let native_options = eframe::NativeOptions{
         initial_window_size: Some(egui::Vec2{x: 1000.0, y: 700.0}),
+        maximized: true,
+        transparent: false,
         ..eframe::NativeOptions::default()
     };
 

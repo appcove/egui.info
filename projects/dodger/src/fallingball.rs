@@ -19,4 +19,9 @@ impl FallingBall {
             radius: 25.0,
         }
     }
+
+    pub fn tick(&mut self) {
+        self.pos += self.vel;
+        self.vel.y += 0.05;
+    }
 }
