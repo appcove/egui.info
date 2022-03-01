@@ -2,6 +2,8 @@
 use crate::egui::Rect;
 use crate::egui::Pos2;
 use crate::egui::Vec2;
+use crate::egui::Painter;
+use crate::egui::Color32;
 
 // Struct to hold a falling ball and it's velocity
 pub struct Player {
@@ -47,5 +49,9 @@ impl Player {
             self.pos.y = screen_rect.max.y;
         }
 
+    }
+
+    pub fn paint(&self, painter: &Painter) {
+        painter.circle_filled(self.pos, self.radius, Color32::GREEN);
     }
 }

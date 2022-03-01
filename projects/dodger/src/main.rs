@@ -121,10 +121,13 @@ impl epi::App for ExampleApp {
 
 
             for ball in &self.balls {
-                painter.circle_filled(ball.pos, ball.radius, Color32::WHITE);
+                ball.paint(painter);
             }
 
-            painter.circle_filled(self.player.pos, self.player.radius, Color32::GREEN);
+            self.player.paint(painter);            
+
+
+            
 
 
             match self.gamestate {

@@ -2,9 +2,19 @@
 use crate::egui::Rect;
 use crate::egui::Pos2;
 use crate::egui::Vec2;
+use crate::egui::Painter;
+use crate::egui::Color32;
 use crate::Rng;
 
+
 // Struct to hold a falling ball and it's velocity
+
+pub enum BallType {
+    Bad,
+    Health,
+}
+
+
 pub struct FallingBall {
     pub pos: Pos2,
     pub vel: Vec2,
@@ -23,5 +33,9 @@ impl FallingBall {
     pub fn tick(&mut self) {
         self.pos += self.vel;
         self.vel.y += 0.05;
+    }
+
+    pub fn paint(&self, painter: &Painter) {
+        painter.circle_filled(self.pos, self.radius, Color32::WHITE);
     }
 }
