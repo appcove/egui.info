@@ -1,29 +1,20 @@
 use eframe::epi;
 use eframe::egui;
-use rand::Rng;
+
 use egui::Color32;  //for circle
-use egui::Stroke;   //for cricle
+//use egui::Stroke;   //for cricle
 use egui::Rect;
 use egui::Pos2;
 use egui::Vec2;
 
+use rand::Rng;
+
+mod keyboard;
+mod fallingball;
+
+use fallingball::FallingBall;
 
 // Struct to hold a falling ball and it's velocity
-struct FallingBall {
-    pos: Pos2,
-    vel: Vec2,
-    radius: f32,
-}
-
-impl FallingBall {
-    fn new(screen_rec: &Rect) -> Self {
-        Self {
-            pos: Pos2::new(rand::thread_rng().gen_range(screen_rec.min.x..screen_rec.max.x), -25.0),
-            vel: Vec2::new(rand::thread_rng().gen_range(-3.0..3.0), 0.0),
-            radius: 25.0,
-        }
-    }
-}
 
 struct ExampleApp {
     balls: Vec<FallingBall>,
@@ -97,18 +88,7 @@ impl epi::App for ExampleApp {
             return;
         }
 
-        if ctx.input().key_down(egui::Key::ArrowLeft){
-            self.platform.x -= 8.0;
-        }
-        if ctx.input().key_down(egui::Key::ArrowRight){
-            self.platform.x += 8.0;
-        }
-        if ctx.input().key_down(egui::Key::ArrowUp) {
-            self.platform.y -= 8.0;
-        }
-        if ctx.input().key_down(egui::Key::ArrowDown) {
-            self.platform.y += 8.0;
-        }
+        self.keyboard_input(ctx, frame);
 
         if self.platform.x < self.screen_rect.min.x {
             self.platform.x = self.screen_rect.min.x;
