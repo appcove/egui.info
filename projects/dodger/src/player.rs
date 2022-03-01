@@ -10,6 +10,7 @@ pub struct Player {
     pub pos: Pos2,
     pub vel: Vec2,
     pub radius: f32,
+    pub energy: i32,
 }
 
 const ACCEL_PER_TICK: f32 = 1.0;
@@ -21,6 +22,7 @@ impl Player {
             pos: pos,
             vel: Vec2::new(0.0, 0.0),
             radius: 15.0,
+            energy: 100,
         }
     }
 

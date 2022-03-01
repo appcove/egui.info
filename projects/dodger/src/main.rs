@@ -14,6 +14,7 @@ mod fallingball;
 mod player;
 
 use fallingball::FallingBall;
+use fallingball::BallType;
 use player::Player;
 
 // Struct to hold a falling ball and it's velocity
@@ -73,18 +74,36 @@ impl ExampleApp {
         for ball in &mut self.balls {
             ball.tick();
 
-            if ball.pos.distance(self.player.pos) < ball.radius + 15.0 {
-                self.gamestate = GameState::GameOver;
+            // check for collision with player
+            if ball.pos.distance(self.player.pos) < ball.radius + self.player.radius {
+                match ball.ball_type {
+                    BallType::Bad => {
+                        self.player.energy -= ball.energy;
+                        ball.energy = 0;
+                    }                    
+                    BallType::Health => {
+                        self.player.energy += ball.energy;
+                        ball.energy = 0;
+                    },
+                }
+                
+
             }
         }
 
+        self.player.tick(&self.screen_rect);
+
+
         let len = self.balls.len();
-        self.balls.retain(|ball| { ball.pos.y < self.screen_rect.max.y + 100.0});
+        self.balls.retain(|ball| { ball.pos.y < self.screen_rect.max.y + ball.radius && ball.energy > 0 });
+        
         for _ in 0..(len - self.balls.len()) {
             self.add_ball();
         }
 
-        self.player.tick(&self.screen_rect);
+        if self.player.energy <= 0 {
+            self.gamestate = GameState::GameOver;
+        }
 
     }
 }
@@ -144,11 +163,11 @@ impl epi::App for ExampleApp {
                     });
                 },
                 GameState::Playing => {
-                    ui.monospace(format!("Score: {} x {}", self.tick_count, self.balls.len()));
+                    ui.monospace(format!("Energy: {} --- Score: {} x {}", self.player.energy, self.tick_count, self.balls.len()));
                 },
                 GameState::Pause => {
                     painter.rect_filled(self.screen_rect.intersect(Rect::everything_above(100.0)), 0.0, Color32::LIGHT_YELLOW);
-                    ui.monospace(format!("Score: {} x {}", self.tick_count, self.balls.len()));
+                    ui.monospace(format!("Energy: {} --- Score: {} x {}", self.player.energy, self.tick_count, self.balls.len()));
                     ui.label("p to unpause");
                },
                 GameState::GameOver => {
