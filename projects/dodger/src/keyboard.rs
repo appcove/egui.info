@@ -25,6 +25,9 @@ impl ExampleApp {
                 }
 
                 if ctx.input().key_down(egui::Key::Space) {
+                    if self.player.deathradius == 0 {
+                        self.player.deathradius = -self.player.radius as i32;
+                    }
                     self.player.deathradius -= 5;
                 }
                 else if self.player.deathradius < 0 {

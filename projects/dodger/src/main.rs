@@ -35,6 +35,7 @@ struct ExampleApp {
     tick_count: u32,
     doreset: bool,
     gamestate: GameState,
+    extra_balls: i32,
 }
 
 impl Default for ExampleApp {
@@ -46,6 +47,7 @@ impl Default for ExampleApp {
             tick_count: 0,
             doreset: false,
             gamestate: GameState::Pending,
+            extra_balls: 0,
         }
     }
 }
@@ -66,13 +68,24 @@ impl ExampleApp {
 
     fn tick(&mut self) {
         self.tick_count += 1;
+        let mut balls_fell_off_bottom = 0;
 
-        if rand::thread_rng().gen_range(0..50) == 0 {
+        if rand::thread_rng().gen_bool(1.0/50.0) {
+            self.add_ball();
+        }
+
+        if self.extra_balls > 0 {
+            self.extra_balls -= 1;
             self.add_ball();
         }
 
         for ball in &mut self.balls {
             ball.tick();
+
+            if ball.pos.y > self.screen_rect.max.y + ball.radius {
+                ball.energy = 0;
+                balls_fell_off_bottom += 1;
+            }
 
             // check for collision with player
             if ball.pos.distance(self.player.pos) < ball.radius + self.player.radius {
@@ -85,6 +98,11 @@ impl ExampleApp {
                         self.player.energy += ball.energy;
                         ball.energy = 0;
                     },
+                    BallType::SuperHealth => {
+                        self.player.energy += ball.energy;
+                        ball.energy = 0;
+                    },
+
                 }
                 
 
@@ -93,23 +111,22 @@ impl ExampleApp {
 
         self.player.tick(&self.screen_rect);
 
-        if self.player.deathradius > 0{
+        if self.player.deathradius > 0 {
             for ball in &mut self.balls {
                 if ball.pos.distance(self.player.pos) < ball.radius + self.player.deathradius as f32 {
                     ball.energy = 0;
+                    self.extra_balls += 1;
                 }
             }
             self.player.deathradius = 0;
         }
         else if self.player.deathradius < 0 {
-            self.player.energy -= 1;
+            self.player.energy += self.player.deathradius / 40;
         }
 
-
-        let len = self.balls.len();
-        self.balls.retain(|ball| { ball.pos.y < self.screen_rect.max.y + ball.radius && ball.energy > 0 });
+        self.balls.retain(|ball| { ball.energy > 0 });
         
-        for _ in 0..(len - self.balls.len()) {
+        for _ in 0..balls_fell_off_bottom {
             self.add_ball();
         }
 

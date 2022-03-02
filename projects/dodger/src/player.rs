@@ -15,6 +15,7 @@ pub struct Player {
     pub deathradius: i32,
 }
 
+const MIN_RADIUS: f32 = 10.0;
 const ACCEL_PER_TICK: f32 = 1.0;
 const DRAG_FACTOR_PER_TICK: f32 = 0.9;
 
@@ -23,7 +24,7 @@ impl Player {
         Self {
             pos: pos,
             vel: Vec2::new(0.0, 0.0),
-            radius: 15.0,
+            radius: MIN_RADIUS,
             energy: 100,
             deathradius: 0,
         }
@@ -54,12 +55,21 @@ impl Player {
             self.pos.y = screen_rect.max.y;
         }
 
+        self.radius = MIN_RADIUS + self.energy as f32 / 100.0;
+
     }
 
     pub fn paint(&self, painter: &Painter) {
         if self.deathradius < 0 {
             painter.circle_stroke(self.pos, -self.deathradius as f32, Stroke::new(2.0, Color32::RED));
         }
-        painter.circle_filled(self.pos, self.radius, Color32::GREEN);
+        painter.circle_filled(self.pos, MIN_RADIUS, Color32::GREEN);
+
+        let mut r = self.radius;
+
+        while r > MIN_RADIUS {
+            painter.circle_stroke(self.pos, r, Stroke::new(2.0, Color32::YELLOW));
+            r -= 5.0;
+        }
     }
 }
