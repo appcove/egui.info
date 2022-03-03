@@ -16,6 +16,7 @@ mod player;
 use fallingball::FallingBall;
 use fallingball::BallType;
 use player::Player;
+use player::PlayerBase;
 
 // Struct to hold a falling ball and it's velocity
 
@@ -36,6 +37,7 @@ struct ExampleApp {
     doreset: bool,
     gamestate: GameState,
     extra_balls: i32,
+    player_base: PlayerBase,
 }
 
 impl Default for ExampleApp {
@@ -48,6 +50,7 @@ impl Default for ExampleApp {
             doreset: false,
             gamestate: GameState::Pending,
             extra_balls: 0,
+            player_base: PlayerBase::new(Pos2::new(800.0, 600.0)),
         }
     }
 }
@@ -87,6 +90,12 @@ impl ExampleApp {
                 balls_fell_off_bottom += 1;
             }
 
+            // check for collision with player base
+            if ball.pos.distance(self.player_base.pos) < ball.radius + self.player_base.radius {
+                ball.vel *= -1.0;
+                ball.pos += ball.vel;
+            }
+
             // check for collision with player
             if ball.pos.distance(self.player.pos) < ball.radius + self.player.radius {
                 match ball.ball_type {
@@ -110,6 +119,7 @@ impl ExampleApp {
         }
 
         self.player.tick(&self.screen_rect);
+        self.player_base.tick(&self.screen_rect);
 
         if self.player.deathradius > 0 {
             for ball in &mut self.balls {
@@ -167,6 +177,7 @@ impl epi::App for ExampleApp {
             self.screen_rect = painter.clip_rect();
             painter.rect_filled(self.screen_rect, 0.0, Color32::BLACK);
 
+            self.player_base.paint(painter);
 
             for ball in &self.balls {
                 ball.paint(painter);

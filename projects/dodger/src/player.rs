@@ -73,3 +73,34 @@ impl Player {
         }
     }
 }
+
+
+
+pub struct PlayerBase {
+    pub pos: Pos2,
+    pub radius: f32,
+    pub energy: i32,
+    pub angle: f32,   
+}
+
+impl PlayerBase {
+    pub fn new(pos: Pos2) -> Self {
+        Self {
+            pos: pos,
+            radius: MIN_RADIUS * 10.0,
+            energy: 100,
+            angle: 0.0,
+        }
+    }
+
+    pub fn tick(&mut self, screen_rect: &Rect) {
+        self.angle += 0.1;
+    }
+
+    pub fn paint(&self, painter: &Painter) {
+        painter.circle_stroke(self.pos, self.radius, Stroke::new(2.0, Color32::GREEN));
+        painter.circle_filled(self.pos+Vec2::angled(self.angle)*self.radius, 5.0, Color32::GREEN);
+        painter.circle_filled(self.pos+Vec2::angled(self.angle+3.14159*2.0/3.0)*self.radius, 5.0, Color32::GREEN);
+        painter.circle_filled(self.pos+Vec2::angled(self.angle-3.14159*2.0/3.0)*self.radius, 5.0, Color32::GREEN);
+    }
+}
