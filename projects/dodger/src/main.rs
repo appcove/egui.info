@@ -121,6 +121,20 @@ impl ExampleApp {
         self.player.tick(&self.screen_rect);
         self.player_base.tick(&self.screen_rect);
 
+        // if player is within base
+        if self.player.pos.distance(self.player_base.pos) < self.player_base.radius {
+            
+            if self.player.energy > 200 {
+                self.player_base.energy += 1;
+                self.player.energy -= 1;
+            }
+            else if self.player.energy < 200 && self.player_base.energy > 200 {
+                self.player_base.energy -= 1;
+                self.player.energy += 1;
+            }
+            
+        }
+
         if self.player.deathradius > 0 {
             for ball in &mut self.balls {
                 if ball.pos.distance(self.player.pos) < ball.radius + self.player.deathradius as f32 {
@@ -203,17 +217,16 @@ impl epi::App for ExampleApp {
                     });
                 },
                 GameState::Playing => {
-                    ui.monospace(format!("Energy: {} --- Score: {} x {}", self.player.energy, self.tick_count, self.balls.len()));
+                    ui.monospace(format!("Energy: {}  Stored: {} --- Score: {} x {}", self.player.energy, self.player_base.energy, self.tick_count, self.balls.len()));
                 },
                 GameState::Pause => {
                     painter.rect_filled(self.screen_rect.intersect(Rect::everything_above(100.0)), 0.0, Color32::LIGHT_YELLOW);
-                    ui.monospace(format!("Energy: {} --- Score: {} x {}", self.player.energy, self.tick_count, self.balls.len()));
                     ui.label("p to unpause");
                },
                 GameState::GameOver => {
                     painter.rect_filled(self.screen_rect.intersect(Rect::everything_above(100.0)), 0.0, Color32::LIGHT_RED);
                     ui.monospace("GAME OVER");
-                    ui.monospace(format!("Score: {} x {}", self.tick_count, self.balls.len()));
+                    ui.monospace(format!("Energy: {}  Stored: {} --- Score: {} x {}", self.player.energy, self.player_base.energy, self.tick_count, self.balls.len()));
                     
                     ui.horizontal(|ui|{
                         if ui.button("Reset").clicked() {
