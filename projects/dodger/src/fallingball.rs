@@ -56,7 +56,7 @@ impl FallingBall {
                 vel,
                 radius,
                 ball_type: BallType::Bad,
-                energy: 66,
+                energy: rand::thread_rng().gen_range(10..200),
             }
         }
     }
@@ -64,6 +64,13 @@ impl FallingBall {
     pub fn tick(&mut self) {
         self.pos += self.vel;
         self.vel.y += 0.02;
+
+        match self.ball_type {
+            BallType::Bad => {
+                self.radius = self.energy as f32 / 7.0;
+            },
+            _ => ()
+        }
     }
 
     pub fn paint(&self, painter: &Painter) {

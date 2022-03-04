@@ -101,7 +101,8 @@ impl ExampleApp {
                 match ball.ball_type {
                     BallType::Bad => {
                         self.player.energy -= ball.energy;
-                        ball.energy = 0;
+                        ball.vel *= -2.0;
+                        ball.energy /= 2;
                     }                    
                     BallType::Health => {
                         self.player.energy += ball.energy;
