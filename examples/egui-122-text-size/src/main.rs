@@ -56,8 +56,8 @@ impl epi::App for ExampleApp {
                     (egui::FontFamily::Proportional, 10.0));
                 ctx.set_fonts(fonts);
             }
-            ui.heading("Text here:");
-            ui.heading("");
+            ui.heading("Text:");
+            ui.heading("--------------------");
             ui.label("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod");
             ui.label("tempor incididunt ut labore et dolore magna aliqua. Semper risus in");
             ui.label("hendrerit gravida rutrum quisque non. Tempus imperdiet nulla");

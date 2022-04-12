@@ -1,10 +1,10 @@
 
-# egui-155-
+# egui-122-multiple-choice
 
 
 ## Source
-- [src/main.rs]({{ site.codeurl }}/examples/egui-155-/src/main.rs)
-- [Project Directory]({{ site.codeurl }}/examples/egui-155-)
+- [src/main.rs]({{ site.codeurl }}/examples/egui-122-multiple-choice/src/main.rs)
+- [Project Directory]({{ site.codeurl }}/examples/egui-122-multiple-choice)
 
 
 ## Screenshots
@@ -13,23 +13,7 @@
 
 ## Description
 
-text
-
-```rust
-
-```
-
-text
-
-```rust
-
-```
-
-text
-
-```rust
-
-```
+A multiple choice/radio button example, where you select a circle, and the circle in the center's color is changed.
 
 
 

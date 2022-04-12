@@ -1,11 +1,10 @@
 
-# egui-133-context-menus
+# egui-122-combo-box
 
-A basic display of how egui context menus work.
 
 ## Source
-- [src/main.rs]({{ site.codeurl }}/examples/egui-133-context-menus/src/main.rs)
-- [Project Directory]({{ site.codeurl }}/examples/egui-133-context-menus)
+- [src/main.rs]({{ site.codeurl }}/examples/egui-122-combo-box/src/main.rs)
+- [Project Directory]({{ site.codeurl }}/examples/egui-122-combo-box)
 
 
 ## Screenshots
@@ -14,7 +13,7 @@ A basic display of how egui context menus work.
 
 ## Description
 
-This project has multiple buttons, if you interact in a certain way with them, they will show context menus which can lead to more context menus.
+A simple example of an egui combo box, where there is a label as output, and a button that Selects Option 2.
 
 
 
