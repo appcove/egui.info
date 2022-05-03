@@ -40,6 +40,11 @@ enum TileType {
     PortalIn,
 }
 
+enum GameState {
+    Main,
+    Game,
+    Load,
+}
 
 #[derive(Copy, Clone)]
 struct Tile {
@@ -142,6 +147,10 @@ impl Level {
         self.tiles[y*LEVEL_SIZE_X + x] = value;
     }
 
+    fn set_spec_tile(&mut self, z: usize, value: Tile) {
+        self.tiles[z] = value;
+    }
+
     fn add_cell(&mut self, x: usize, y: usize) {
         self.energy.insert((x,y), Cell::new(x,y));
     }
@@ -205,6 +214,8 @@ struct DorpalApp {
     level: Level,
     ticks: f32,
     clicked: bool,
+    state: GameState,
+    data: String
 }
 
 
@@ -226,6 +237,8 @@ impl Default for DorpalApp {
             level: level,
             ticks: 0.0,
             clicked: false,
+            state: GameState::Game,
+            data: String::new()
         }
     }
 }
@@ -363,9 +376,46 @@ impl DorpalApp {
         }
         return ret;
     }
-
+    
+    
+    fn load(&mut self) {
+        let mut i = 0;
+        for j in self.data.chars() {
+            i += 1;
+            let tile = match j {
+                '1' => TileType::Void,
+                '2' => TileType::Insulator,
+                '3' => TileType::Border,
+                '4' => TileType::Charger,
+                '5' => TileType::Lava,
+                '6' => TileType::PortalIn,
+                '7' => TileType::PortalOut,
+                _ => TileType::Void,
+            };
+            self.level.set_spec_tile(i, Tile {tiletype: tile})
+        }
+    }
+    
+    fn save(&mut self){
+        self.data = String::new();
+        for x in 0..LEVEL_SIZE_X {
+            for y in 0..LEVEL_SIZE_Y {
+                self.data.push(match self.level.get_tile(x,y).tiletype {
+                    TileType::Void => '1',
+                    TileType::Insulator => '2',
+                    TileType::Border => '3',
+                    TileType::Charger => '4',
+                    TileType::Lava => '5',
+                    TileType::PortalIn => '6',
+                    TileType::PortalOut => '7',
+                });
+            }
+        }
+    }
         
 }
+
+
 
 impl epi::App for DorpalApp {
     
@@ -381,208 +431,239 @@ impl epi::App for DorpalApp {
         return true;
     }
 
+    
+
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
-        self.tick();
         
-        // Looks better on 4k montior
-        ctx.set_pixels_per_point(1.5);
 
-        let instate = &ctx.input();
+        match self.state {
 
-        if instate.key_pressed(Key::Space) {
+            GameState::Game => { 
+        
+                self.tick();
+                
+                // Looks better on 4k montior
+                ctx.set_pixels_per_point(1.5);
+
+                let instate = &ctx.input();
+
+                if instate.key_pressed(Key::Space) {
+                    
+                }
+
+                if instate.key_down(Key::W) {
+                    self.view_anchor.y -= 12.2;
+                    self.view_anchor.y = self.view_anchor.y.max(-25.0);
+                }
+
+                if instate.key_down(Key::S) {
+                    self.view_anchor.y += 12.2;
+                }
             
-        }
+                if instate.key_down(Key::A) {
+                    self.view_anchor.x -= 12.2;
+                    self.view_anchor.x = self.view_anchor.x.max(0.0);
+                }
 
-        if instate.key_down(Key::W) {
-            self.view_anchor.y -= 12.2;
-            self.view_anchor.y = self.view_anchor.y.max(-25.0);
-        }
+                if instate.key_down(Key::D) {
+                    self.view_anchor.x += 12.2;
+                }
 
-        if instate.key_down(Key::S) {
-            self.view_anchor.y += 12.2;
-        }
-    
-        if instate.key_down(Key::A) {
-            self.view_anchor.x -= 12.2;
-            self.view_anchor.x = self.view_anchor.x.max(0.0);
-        }
-
-        if instate.key_down(Key::D) {
-            self.view_anchor.x += 12.2;
-        }
-
-        egui::TopBottomPanel::top("topnav").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                if ui.button("Reset").clicked() {
-                    self.reset();
-                };
-                if ui.button("Quit").clicked() {
-                    frame.quit()
-                };
-            });
-        });
-
-        egui::CentralPanel::default().show(ctx, |ui| {
-    
-            let painter = ui.painter_at(Rect::everything_below(25.0));
-            let view_rect_onscreen = painter.clip_rect();
-
+                egui::CentralPanel::default().show(ctx, |ui| {
             
+                    let painter = ui.painter_at(Rect::everything_below(25.0));
+                    let view_rect_onscreen = painter.clip_rect();
 
-            for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
-                let tile = self.level.get_tile(x, y);
-                let tile_rect_onscreen = self.integral_to_rect_onscreen(x,y);
-
-                painter.rect_filled(
-                    tile_rect_onscreen, 
-                    0.0,//POINTS_PER_TILE/4.0, 
-                    match tile.tiletype {
-                        TileType::Void => Color32::BLACK,
-                        TileType::Insulator => Color32::GRAY,
-                        TileType::Border => Color32::DARK_RED,
-                        TileType::Charger => Color32::GREEN,
-                        TileType::Lava => Color32::from_rgb(255, 140, 0),
-                        TileType::PortalIn => Color32::from_rgb(0, 200, 200),
-                        TileType::PortalOut => Color32::GOLD,
-                    }
-                );  
-            }
-
-            for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
-                let tile_rect_onscreen = self.integral_to_rect_onscreen(x,y);
-
-                // draw a circle at the center of the tile if there is an energy cell present
-                if let Some(energy_cell) = self.level.get_cell(x,y) {
                     
 
-                    for a in [PI*2.0/3.0*0.0, PI*2.0/3.0*1.0, PI*2.0/3.0*2.0].iter() {
-                        painter.circle(tile_rect_onscreen.center() + Vec2::angled(energy_cell.starttick/10.0+*a)*energy_cell.radius(), POINTS_PER_TILE/6.0, energy_cell.color(), STROKE_ENERGY_CELL);                    
-                    }
-                    painter.circle(
-                        tile_rect_onscreen.center(), 
-                        energy_cell.radius(),
-                        energy_cell.color(),
-                        STROKE_ENERGY_CELL,
-                    );      
+                    for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
+                        let tile = self.level.get_tile(x, y);
+                        let tile_rect_onscreen = self.integral_to_rect_onscreen(x,y);
 
-                }
-                
-            }
+                        painter.rect_filled(
+                            tile_rect_onscreen, 
+                            0.0,//POINTS_PER_TILE/4.0, 
+                            match tile.tiletype {
+                                TileType::Void => Color32::BLACK,
+                                TileType::Insulator => Color32::GRAY,
+                                TileType::Border => Color32::DARK_RED,
+                                TileType::Charger => Color32::GREEN,
+                                TileType::Lava => Color32::from_rgb(255, 140, 0),
+                                TileType::PortalIn => Color32::from_rgb(0, 200, 200),
+                                TileType::PortalOut => Color32::GOLD,
+                            }
+                        );  
+                    }
 
-            let pointer = &ctx.input().pointer;
-           
-            if let Some(mousepos) = pointer.hover_pos() {
-                if view_rect_onscreen.contains(mousepos) {
-                  
-                    let (x,y) = self.onscreen_pos_to_integral(mousepos);
+                    for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
+                        let tile_rect_onscreen = self.integral_to_rect_onscreen(x,y);
 
-                    if instate.key_down(Key::Space) {
-                        if pointer.primary_down(){
-                            self.level.set_tile(x, y, Tile::from_type(TileType::Insulator));
-                        }
-                        if pointer.secondary_down(){
-                            if self.level.get_tile(x, y).tiletype == TileType::Insulator {
-                                self.level.set_tile(x, y, Tile::default());
+                        // draw a circle at the center of the tile if there is an energy cell present
+                        if let Some(energy_cell) = self.level.get_cell(x,y) {
+                            
+
+                            for a in [PI*2.0/3.0*0.0, PI*2.0/3.0*1.0, PI*2.0/3.0*2.0].iter() {
+                                painter.circle(tile_rect_onscreen.center() + Vec2::angled(energy_cell.starttick/10.0+*a)*energy_cell.radius(), POINTS_PER_TILE/6.0, energy_cell.color(), STROKE_ENERGY_CELL);                    
                             }
+                            painter.circle(
+                                tile_rect_onscreen.center(), 
+                                energy_cell.radius(),
+                                energy_cell.color(),
+                                STROKE_ENERGY_CELL,
+                            );      
+
                         }
+                        
                     }
-                    if instate.key_down(Key::L) {
-                        if pointer.primary_down(){
-                            self.level.set_tile(x, y, Tile::from_type(TileType::Lava));
-                        }
-                        if pointer.secondary_down(){
-                            if self.level.get_tile(x, y).tiletype == TileType::Lava {
-                                self.level.set_tile(x, y, Tile::default());
-                            }
-                        }
+
+                    let pointer = &ctx.input().pointer;
+                    if instate.key_down(Key::Escape) {
+                        self.state = GameState::Main;
                     }
-                    if instate.key_down(Key::P) {
-                        if pointer.primary_down(){
-                            self.level.set_tile(x, y, Tile::from_type(TileType::PortalIn));
-                        }
-                        if pointer.secondary_down(){
-                            if self.level.get_tile(x, y).tiletype == TileType::PortalIn {
-                                self.level.set_tile(x, y, Tile::default())
-                            }
-                        }
-                    }
-                    if instate.key_down(Key::O) {
-                        if pointer.primary_down(){
-                            self.level.set_tile(x, y, Tile::from_type(TileType::PortalOut));
-                        }
-                        if pointer.secondary_down(){
-                            if self.level.get_tile(x, y).tiletype == TileType::PortalOut {
-                                self.level.set_tile(x, y, Tile::default())
-                            }
-                        }
-                    }
-                    else if instate.key_down(Key::E) {
-                        if pointer.primary_down(){
-                            self.level.set_tile(x, y, Tile::from_type(TileType::Charger));
-                        }
-                        if pointer.secondary_down(){
-                            if self.level.get_tile(x, y).tiletype == TileType::Charger {
-                                self.level.set_tile(x, y, Tile::default());
-                            }
-                        }
-                    }
-                    else if instate.key_down(Key::B)  {
-                        if pointer.primary_down(){
-                            for x in x-2..=x+2{
-                                for y in y-2..=y+2{
-                                    if x > 0 && x < LEVEL_SIZE_X-1 && y > 0 && y < LEVEL_SIZE_Y-1 {
-                                        self.level.set_tile(x, y, Tile::from_type(TileType::Insulator));
-                                    }
+                    if let Some(mousepos) = pointer.hover_pos() {
+                        if view_rect_onscreen.contains(mousepos) {
+                        
+                            let (x,y) = self.onscreen_pos_to_integral(mousepos);
+
+                            if instate.key_down(Key::Space) {
+                                if pointer.primary_down(){
+                                    self.level.set_tile(x, y, Tile::from_type(TileType::Insulator));
                                 }
-                            }
-                        }
-                        if pointer.secondary_down(){
-                            for x in x-2..=x+2{
-                                for y in y-2..=y+2{
-                                    if x > 0 && x < LEVEL_SIZE_X-1 && y > 0 && y < LEVEL_SIZE_Y-1 {
+                                if pointer.secondary_down(){
+                                    if self.level.get_tile(x, y).tiletype == TileType::Insulator {
                                         self.level.set_tile(x, y, Tile::default());
                                     }
                                 }
                             }
-                        }
-                    }
-                    else if instate.keys_down.len() > 0 {
+                            if instate.key_down(Key::L) {
+                                if pointer.primary_down(){
+                                    self.level.set_tile(x, y, Tile::from_type(TileType::Lava));
+                                }
+                                if pointer.secondary_down(){
+                                    if self.level.get_tile(x, y).tiletype == TileType::Lava {
+                                        self.level.set_tile(x, y, Tile::default());
+                                    }
+                                }
+                            }
+                            if instate.key_down(Key::P) {
+                                if pointer.primary_down(){
+                                    self.level.set_tile(x, y, Tile::from_type(TileType::PortalIn));
+                                }
+                                if pointer.secondary_down(){
+                                    if self.level.get_tile(x, y).tiletype == TileType::PortalIn {
+                                        self.level.set_tile(x, y, Tile::default())
+                                    }
+                                }
+                            }
+                            if instate.key_down(Key::O) {
+                                if pointer.primary_down(){
+                                    self.level.set_tile(x, y, Tile::from_type(TileType::PortalOut));
+                                }
+                                if pointer.secondary_down(){
+                                    if self.level.get_tile(x, y).tiletype == TileType::PortalOut {
+                                        self.level.set_tile(x, y, Tile::default())
+                                    }
+                                }
+                            }
+                            else if instate.key_down(Key::E) {
+                                if pointer.primary_down(){
+                                    self.level.set_tile(x, y, Tile::from_type(TileType::Charger));
+                                }
+                                if pointer.secondary_down(){
+                                    if self.level.get_tile(x, y).tiletype == TileType::Charger {
+                                        self.level.set_tile(x, y, Tile::default());
+                                    }
+                                }
+                            }
+                            else if instate.key_down(Key::B)  {
+                                if pointer.primary_down(){
+                                    for x in x-2..=x+2{
+                                        for y in y-2..=y+2{
+                                            if x > 0 && x < LEVEL_SIZE_X-1 && y > 0 && y < LEVEL_SIZE_Y-1 {
+                                                self.level.set_tile(x, y, Tile::from_type(TileType::Insulator));
+                                            }
+                                        }
+                                    }
+                                }
+                                if pointer.secondary_down(){
+                                    for x in x-2..=x+2{
+                                        for y in y-2..=y+2{
+                                            if x > 0 && x < LEVEL_SIZE_X-1 && y > 0 && y < LEVEL_SIZE_Y-1 {
+                                                self.level.set_tile(x, y, Tile::default());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else if instate.keys_down.len() > 0 {
 
-                    }
-                    else if pointer.primary_down() {
-                        if self.clicked == false {
-                            self.clicked = true;
-                            let tile = self.level.get_tile(x,y);
+                            }
+                            else if pointer.primary_down() {
+                                if self.clicked == false {
+                                    self.clicked = true;
+                                    let tile = self.level.get_tile(x,y);
 
-                            if self.level.energy.contains_key(&(x,y)) {
-                                self.level.rem_cell(x, y)
+                                    if self.level.energy.contains_key(&(x,y)) {
+                                        self.level.rem_cell(x, y)
+                                    }
+                                    else {
+                                        if tile.tiletype == TileType::Void || tile.tiletype == TileType::Insulator || tile.tiletype == TileType::PortalOut || tile.tiletype == TileType::Charger {
+                                            let mut maxenergy:f32 = 0.0;
+                                            for (nx,ny ) in self.level.get_adjacent_cells(x, y).iter() {
+                                                maxenergy = maxenergy.max(self.level.energy[&(*nx,*ny)].v);
+                                            }
+                                            if maxenergy >= 64.0 {
+                                                self.level.add_cell(x, y)
+                                            }
+                                        }
+                                        if tile.tiletype == TileType::PortalIn && ! self.level.energy.contains_key(&(x,y)) {
+                                            self.level.add_cell(x, y)
+                                        }
+                                    }
+                                }
                             }
                             else {
-                                if tile.tiletype == TileType::Void || tile.tiletype == TileType::Insulator || tile.tiletype == TileType::PortalOut || tile.tiletype == TileType::Charger {
-                                    let mut maxenergy:f32 = 0.0;
-                                    for (nx,ny ) in self.level.get_adjacent_cells(x, y).iter() {
-                                        maxenergy = maxenergy.max(self.level.energy[&(*nx,*ny)].v);
-                                    }
-                                    if maxenergy >= 64.0 {
-                                        self.level.add_cell(x, y)
-                                    }
-                                }
-                                if tile.tiletype == TileType::PortalIn && ! self.level.energy.contains_key(&(x,y)) {
-                                    self.level.add_cell(x, y)
-                                }
+                                self.clicked = false;
                             }
+                            
                         }
                     }
-                    else{
-                        self.clicked = false;
-                    }
-                    
-                }
-            }
-        });
+                });
 
-        // This is how to go into continuous mode - uncomment this to see example of continuous mode
-        ctx.request_repaint();
+                // This is how to go into continuous mode - uncomment this to see example of continuous mode
+                ctx.request_repaint();
+            },
+            GameState::Main => {
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    
+                    if ui.add(egui::Button::new("Resume")).clicked() {
+                        self.state = GameState::Game;
+                    }
+                    if ui.button("Reset").clicked() {
+                        self.reset();
+                    };
+                    if ui.button("Quit").clicked() {
+                        frame.quit();
+                    };
+                    if ui.button("Load/Save").clicked() {
+                        self.state = GameState::Load;
+                        self.save();
+                    };
+                });
+            }
+            GameState::Load => {
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    ui.add(egui::TextEdit::singleline(&mut self.data).hint_text("Write something here"));
+                    if ui.button("Load").clicked() {
+                        self.load();
+                        self.state = GameState::Game;
+                    };
+                    if ui.button("Back").clicked() {
+                        self.state = GameState::Main;
+                    };
+                });
+            }
+        }
     }
 }
 
