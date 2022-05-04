@@ -233,7 +233,7 @@ impl Default for DorpalApp {
 
         Self {
             //view_center: Vec2::new((LEVEL_SIZE_X as f32)*POINTS_PER_TILE*0.5, (LEVEL_SIZE_Y as f32)*POINTS_PER_TILE*0.5),
-            view_anchor: Vec2::new(0.0, -25.0),
+            view_anchor: Vec2::new(0.0, 0.0),
             level: level,
             ticks: 0.0,
             clicked: false,
@@ -381,7 +381,6 @@ impl DorpalApp {
     fn load(&mut self) {
         let mut i = 0;
         for j in self.data.chars() {
-            i += 1;
             let tile = match j {
                 '1' => TileType::Void,
                 '2' => TileType::Insulator,
@@ -392,7 +391,8 @@ impl DorpalApp {
                 '7' => TileType::PortalOut,
                 _ => TileType::Void,
             };
-            self.level.set_spec_tile(i, Tile {tiletype: tile})
+            self.level.set_spec_tile(i, Tile {tiletype: tile});
+            i += 1;
         }
     }
     
@@ -452,7 +452,7 @@ impl epi::App for DorpalApp {
 
                 if instate.key_down(Key::W) {
                     self.view_anchor.y -= 12.2;
-                    self.view_anchor.y = self.view_anchor.y.max(-25.0);
+                    self.view_anchor.y = self.view_anchor.y.max(0.0);
                 }
 
                 if instate.key_down(Key::S) {
@@ -470,7 +470,7 @@ impl epi::App for DorpalApp {
 
                 egui::CentralPanel::default().show(ctx, |ui| {
             
-                    let painter = ui.painter_at(Rect::everything_below(25.0));
+                    let painter = ui.painter();
                     let view_rect_onscreen = painter.clip_rect();
 
                     
@@ -634,7 +634,31 @@ impl epi::App for DorpalApp {
             },
             GameState::Main => {
                 egui::CentralPanel::default().show(ctx, |ui| {
+                    let painter = ui.painter();
+                    let view_rect_onscreen = painter.clip_rect();
+
                     
+
+                    for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
+                        let tile = self.level.get_tile(x, y);
+                        let tile_rect_onscreen = self.integral_to_rect_onscreen(x,y);
+
+                        painter.rect_filled(
+                            tile_rect_onscreen, 
+                            0.0,//POINTS_PER_TILE/4.0, 
+                            match tile.tiletype {
+                                TileType::Void => Color32::BLACK,
+                                TileType::Insulator => Color32::from_rgb(80, 80, 80),
+                                TileType::Border => Color32::from_rgb(64, 0, 0),
+                                TileType::Charger => Color32::from_rgb(0, 122, 0),
+                                TileType::Lava => Color32::from_rgb(122, 70, 0),
+                                TileType::PortalIn => Color32::from_rgb(0, 100, 100),
+                                TileType::PortalOut => Color32::from_rgb(122, 107, 0),
+                            }
+                        );  
+                    }
+                });
+                egui::Window::new("Menu").title_bar(false).show(ctx, |ui| {
                     if ui.add(egui::Button::new("Resume")).clicked() {
                         self.state = GameState::Game;
                     }
@@ -652,10 +676,40 @@ impl epi::App for DorpalApp {
             }
             GameState::Load => {
                 egui::CentralPanel::default().show(ctx, |ui| {
+                    let painter = ui.painter();
+                    let view_rect_onscreen = painter.clip_rect();
+
+                    
+
+                    for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
+                        let tile = self.level.get_tile(x, y);
+                        let tile_rect_onscreen = self.integral_to_rect_onscreen(x,y);
+
+                        painter.rect_filled(
+                            tile_rect_onscreen, 
+                            0.0,//POINTS_PER_TILE/4.0, 
+                            match tile.tiletype {
+                                TileType::Void => Color32::BLACK,
+                                TileType::Insulator => Color32::from_rgb(80, 80, 80),
+                                TileType::Border => Color32::from_rgb(64, 0, 0),
+                                TileType::Charger => Color32::from_rgb(0, 122, 0),
+                                TileType::Lava => Color32::from_rgb(122, 70, 0),
+                                TileType::PortalIn => Color32::from_rgb(0, 100, 100),
+                                TileType::PortalOut => Color32::from_rgb(122, 107, 0),
+                            }
+                        );  
+                    }
+
+                    
+                });
+                egui::Window::new("Load/Save").title_bar(false).show(ctx, |ui| {
                     ui.add(egui::TextEdit::singleline(&mut self.data).hint_text("Write something here"));
                     if ui.button("Load").clicked() {
                         self.load();
                         self.state = GameState::Game;
+                    };
+                    if ui.button("Copy").clicked() {
+                        ui.output().copied_text = String::from(&self.data);
                     };
                     if ui.button("Back").clicked() {
                         self.state = GameState::Main;
