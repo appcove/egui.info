@@ -147,6 +147,10 @@ impl Level {
         self.tiles[y*LEVEL_SIZE_X + x] = value;
     }
 
+    fn set_spec_tile(&mut self, z: usize, value: Tile) {
+        self.tiles[z] = value;
+    }
+
     fn add_cell(&mut self, x: usize, y: usize) {
         self.energy.insert((x,y), Cell::new(x,y));
     }
@@ -375,13 +379,39 @@ impl DorpalApp {
     
     
     fn load(&mut self) {
-        //load
+        let mut i = 0;
+        for j in self.data.chars() {
+            i += 1;
+            let tile = match j {
+                '1' => TileType::Void,
+                '2' => TileType::Insulator,
+                '3' => TileType::Border,
+                '4' => TileType::Charger,
+                '5' => TileType::Lava,
+                '6' => TileType::PortalIn,
+                '7' => TileType::PortalOut,
+                _ => TileType::Void,
+            };
+            self.level.set_spec_tile(i, Tile {tiletype: tile})
+        }
     }
     
     fn save(&mut self){
-        //save
-    }
-        
+        self.data = String::new();
+        for x in 0..LEVEL_SIZE_X {
+            for y in 0..LEVEL_SIZE_Y {
+                self.data.push(match self.level.get_tile(x,y).tiletype {
+                    TileType::Void => '1',
+                    TileType::Insulator => '2',
+                    TileType::Border => '3',
+                    TileType::Charger => '4',
+                    TileType::Lava => '5',
+                    TileType::PortalIn => '6',
+                    TileType::PortalOut => '7',
+                });
+            }
+        }
+    }    
 }
 
 
