@@ -27,6 +27,11 @@ cargo build
 1. [egui-112-button-move-circle](./egui-112-button-move-circle): Buttons that effect a circle on the screen
 1. [egui-112-keypress-move-circle](./egui-112-keypress-move-circle): Moving a circle around the screen using keypresses
 
+## 122: Basic Widgets
+
+1. [egui-122-checkbox-functionality](./egui-122-checkbox-functionality) Using Checkboxes to change the circle color
+1. [egui-122-slider](./egui-122-slider) Using Sliders to change the circle color
+
 ## 144: Basic Interactive Games
 
 1. [egui-144-clicker-game](./egui-144-clicker-game): Gets points for clicks
