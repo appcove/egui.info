@@ -1,5 +1,5 @@
 [package]
-name = "egui-144-ball-chaser-two-player"
+name = "dorpal"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.56"

@@ -147,8 +147,9 @@ impl Level {
         self.tiles[y*LEVEL_SIZE_X + x] = value;
     }
 
-    fn set_spec_tile(&mut self, z: usize, value: Tile) {
+    fn set_spec_tile(&mut self, z: usize, value: Tile) -> usize {
         self.tiles[z] = value;
+        z+1
     }
 
     fn add_cell(&mut self, x: usize, y: usize) {
@@ -393,16 +394,14 @@ impl DorpalApp {
                 '7' => TileType::PortalOut,
                 _ => TileType::Void,
             };
-            println!("{}",i);
-            self.level.set_spec_tile(i, Tile {tiletype: tile});
-            i += 1;
+            if i < 16384 {i = self.level.set_spec_tile(i, Tile {tiletype: tile});}
         }
     }
     
     fn save(&mut self){
         self.data = String::new();
-        for x in 0..LEVEL_SIZE_X {
-            for y in 0..LEVEL_SIZE_Y {
+        for y in 0..LEVEL_SIZE_Y {
+            for x in 0..LEVEL_SIZE_X {
                 self.data.push(match self.level.get_tile(x,y).tiletype {
                     TileType::Void => '1',
                     TileType::Insulator => '2',
