@@ -215,7 +215,8 @@ struct DorpalApp {
     ticks: f32,
     clicked: bool,
     state: GameState,
-    data: String
+    data: String,
+    screen_rect: Rect,
 }
 
 
@@ -238,7 +239,8 @@ impl Default for DorpalApp {
             ticks: 0.0,
             clicked: false,
             state: GameState::Game,
-            data: String::new()
+            data: String::new(),
+            screen_rect: Rect{min: Pos2{x: 0.0, y: 0.0}, max: Pos2{x: 1000.0, y: 700.0}},
         }
     }
 }
@@ -391,6 +393,7 @@ impl DorpalApp {
                 '7' => TileType::PortalOut,
                 _ => TileType::Void,
             };
+            println!("{}",i);
             self.level.set_spec_tile(i, Tile {tiletype: tile});
             i += 1;
         }
@@ -434,6 +437,7 @@ impl epi::App for DorpalApp {
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
         
+        
 
         match self.state {
 
@@ -471,11 +475,11 @@ impl epi::App for DorpalApp {
                 egui::CentralPanel::default().show(ctx, |ui| {
             
                     let painter = ui.painter();
-                    let view_rect_onscreen = painter.clip_rect();
+                    self.screen_rect = painter.clip_rect();
 
                     
 
-                    for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
+                    for (x,y) in self.onscreen_to_absolute_iterator(self.screen_rect) {
                         let tile = self.level.get_tile(x, y);
                         let tile_rect_onscreen = self.integral_to_rect_onscreen(x,y);
 
@@ -494,7 +498,7 @@ impl epi::App for DorpalApp {
                         );  
                     }
 
-                    for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
+                    for (x,y) in self.onscreen_to_absolute_iterator(self.screen_rect) {
                         let tile_rect_onscreen = self.integral_to_rect_onscreen(x,y);
 
                         // draw a circle at the center of the tile if there is an energy cell present
@@ -520,7 +524,7 @@ impl epi::App for DorpalApp {
                         self.state = GameState::Main;
                     }
                     if let Some(mousepos) = pointer.hover_pos() {
-                        if view_rect_onscreen.contains(mousepos) {
+                        if self.screen_rect.contains(mousepos) {
                         
                             let (x,y) = self.onscreen_pos_to_integral(mousepos);
 
@@ -635,11 +639,10 @@ impl epi::App for DorpalApp {
             GameState::Main => {
                 egui::CentralPanel::default().show(ctx, |ui| {
                     let painter = ui.painter();
-                    let view_rect_onscreen = painter.clip_rect();
-
+                    self.screen_rect = painter.clip_rect();
                     
 
-                    for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
+                    for (x,y) in self.onscreen_to_absolute_iterator(self.screen_rect) {
                         let tile = self.level.get_tile(x, y);
                         let tile_rect_onscreen = self.integral_to_rect_onscreen(x,y);
 
@@ -658,7 +661,14 @@ impl epi::App for DorpalApp {
                         );  
                     }
                 });
-                egui::Window::new("Menu").title_bar(false).show(ctx, |ui| {
+                egui::Window::new("Menu").title_bar(false).current_pos(Pos2 {x: (self.screen_rect.max.x)/2.0-self.screen_rect.min.x-30.0, y: (self.screen_rect.max.y)/2.0-self.screen_rect.min.y-30.0}).show(ctx, |ui| {
+                    
+                    let mut fonts = egui::FontDefinitions::default();
+                    fonts.family_and_size.insert(
+                        egui::TextStyle::Button,
+                        (egui::FontFamily::Proportional, 20.0));
+                    ctx.set_fonts(fonts);
+                    
                     if ui.add(egui::Button::new("Resume")).clicked() {
                         self.state = GameState::Game;
                     }
@@ -677,11 +687,11 @@ impl epi::App for DorpalApp {
             GameState::Load => {
                 egui::CentralPanel::default().show(ctx, |ui| {
                     let painter = ui.painter();
-                    let view_rect_onscreen = painter.clip_rect();
+                    self.screen_rect = painter.clip_rect();
 
                     
 
-                    for (x,y) in self.onscreen_to_absolute_iterator(view_rect_onscreen) {
+                    for (x,y) in self.onscreen_to_absolute_iterator(self.screen_rect) {
                         let tile = self.level.get_tile(x, y);
                         let tile_rect_onscreen = self.integral_to_rect_onscreen(x,y);
 
@@ -703,7 +713,14 @@ impl epi::App for DorpalApp {
                     
                 });
                 egui::Window::new("Load/Save").title_bar(false).show(ctx, |ui| {
-                    ui.add(egui::TextEdit::singleline(&mut self.data).hint_text("Write something here"));
+
+                    let mut fonts = egui::FontDefinitions::default();
+                    fonts.family_and_size.insert(
+                        egui::TextStyle::Button,
+                        (egui::FontFamily::Proportional, 20.0));
+                    ctx.set_fonts(fonts);
+
+                    ui.add(egui::TextEdit::singleline(&mut self.data).hint_text("paste code here"));
                     if ui.button("Load").clicked() {
                         self.load();
                         self.state = GameState::Game;
