@@ -31,6 +31,11 @@ cargo build
 
 1. [egui-122-checkbox-functionality](./egui-122-checkbox-functionality) Using Checkboxes to change the circle color
 1. [egui-122-slider](./egui-122-slider) Using Sliders to change the circle color
+1. [egui-122-combo-box](./egui-122-combo-box) A simple example of an egui combo box
+1. [egui-122-button-grid](./egui-122-button-grid) A example of buttons, sliders, and grids in egui
+1. [egui-122-multiple-choice](./egui-122-multiple-choice) A multiple choice/radio button example
+1. [egui-122-text-size](./egui-122-text-size) Text size example in egui
+1. [egui-122-check-box](./egui-122-check-box) A widget for check boxes in egui
 
 ## 144: Basic Interactive Games
 
