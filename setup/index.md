@@ -67,6 +67,7 @@ Next, we will clone the egui.info project git repository. For this example, inst
 ```bash
 cd ~/Code
 git clone git@github.com:appcove/egui.info.git
+cd egui.info
 ```
 
 After git is finished cloning the repository, change directories into our example of a simple native Rust application and run cargo.
