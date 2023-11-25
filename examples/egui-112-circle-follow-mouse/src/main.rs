@@ -1,9 +1,14 @@
-use eframe::epi;
 use eframe::egui;
-use egui::color::Color32;
-use egui::epaint::Stroke;
+use egui::Color32;
+use egui::Stroke;
 
 struct ExampleApp {}
+
+impl ExampleApp {
+    fn name() -> &'static str {
+        "egui 112 circle follow mouse"
+    }
+}
 
 impl Default for ExampleApp {
     fn default() -> Self {
@@ -11,45 +16,50 @@ impl Default for ExampleApp {
     }
 }
 
-impl epi::App for ExampleApp {
-    fn name(&self) -> &str {
-        "egui 112 circle follow mouse"
-    }
-
-    fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
+impl eframe::App for ExampleApp {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         // On each frame, set 1.5 pixels per point
         ctx.set_pixels_per_point(1.5);
 
         // Setup the central panel
         egui::CentralPanel::default().show(ctx, |ui| {
             if ui.button("Quit").clicked() {
-                frame.quit();
-            }            
-            
-            let painter = ui.painter();
-            let pointer = &ctx.input().pointer;
-            
+                std::process::exit(0);
+            }
 
-            if let Some(mousepos) = pointer.hover_pos() {
+            // We can't use the painter inside ctx.input(), so we return the data we need to use
+            let hover_pos = ctx.input(|input| {
+                let pointer = &input.pointer;
+
+                pointer.hover_pos()
+            });
+
+            let painter = ui.painter();
+
+            if let Some(mousepos) = hover_pos {
                 painter.circle(
                     mousepos,
-                    50.0, 
-                    Color32::TRANSPARENT, 
-                    Stroke{width: 2.0, color: Color32::LIGHT_YELLOW}
+                    50.0,
+                    Color32::TRANSPARENT,
+                    Stroke {
+                        width: 2.0,
+                        color: Color32::LIGHT_YELLOW,
+                    },
                 );
             }
         });
-
     }
 }
 
-fn main() {
-    let app = ExampleApp::default();
-
-    let native_options = eframe::NativeOptions{
-        initial_window_size: Some(egui::Vec2{x:800.0, y:600.0}),
+fn main() -> eframe::Result<()> {
+    let native_options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size((800.0, 800.0)),
         ..eframe::NativeOptions::default()
     };
-    
-    eframe::run_native(Box::new(app), native_options);
+
+    eframe::run_native(
+        ExampleApp::name(),
+        native_options,
+        Box::new(|_| Box::<ExampleApp>::default()),
+    )
 }
