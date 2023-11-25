@@ -61,7 +61,7 @@ egui::CentralPanel::default().show(ctx, |ui| {
         self.cc = Color32::from_rgb(000, 180, 215)
     };
     if ui.button("Quit").clicked() {
-        frame.quit()
+        std::process::exit(0);
     };
 
     let painter = ui.painter();
