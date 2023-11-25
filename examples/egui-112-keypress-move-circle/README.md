@@ -46,7 +46,7 @@ We use `ctx.input().key_pressed()` to check if a specific key is pressed everyti
 W,A,S,D to move around, and UP,DOWN to change size, C,O to change color.
 
 ```rust
-fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
+fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
     
     ctx.set_pixels_per_point(1.5);
 
