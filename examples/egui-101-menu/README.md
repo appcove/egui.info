@@ -1,4 +1,3 @@
-
 # egui-101-menu
 
 This is a simple example with a menubar and multiple submenus.
@@ -19,17 +18,15 @@ Typically, a menubar will go on the top panel. We create a `menu::bar` and popul
 
 Here is an example of how to render a menu bar with a single dropdown menu:
 
-```rust 
+```rust
 egui::menu::bar(ui, |ui| {
     ui.menu_button("File", |ui| {
         if ui.button("Save").clicked() {
             //functionality
         }
         if ui.button("Quit").clicked() {
-            frame.quit();
+            std::process::exit(0);
         }
     });
-]);
+});
 ```
-
-
