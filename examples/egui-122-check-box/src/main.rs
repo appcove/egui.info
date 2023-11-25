@@ -1,4 +1,3 @@
-use eframe::epi;
 use eframe::egui;
 
 struct ExampleApp {
@@ -8,9 +7,15 @@ struct ExampleApp {
     checked: bool,
 }
 
+impl ExampleApp {
+    fn name() -> &'static str {
+        "egui-122-check-box"
+    }
+}
+
 impl Default for ExampleApp {
     fn default() -> Self {
-        Self {   
+        Self {
             numsel: 0,
             oldsels: String::from(""),
             newsels: String::from(""),
@@ -19,22 +24,17 @@ impl Default for ExampleApp {
     }
 }
 
-impl epi::App for ExampleApp {
-    fn name(&self) -> &str {
-        "egui-122-check-box"
-    }
-    
-    fn update(&mut self, ctx: &egui::CtxRef, _frame: &epi::Frame) {
-        ctx.set_pixels_per_point(1.5); 
+impl eframe::App for ExampleApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        ctx.set_pixels_per_point(1.5);
         self.numsel = 0;
-        egui::CentralPanel::default().show(ctx, |ui| {   
+        egui::CentralPanel::default().show(ctx, |ui| {
             if ui.button("Quit").clicked() {
-                _frame.quit()
+                std::process::exit(0);
             };
             if ui.button("Add checkbox").clicked() {
                 self.oldsels.push_str("0");
             }
-            
 
             for i in self.oldsels.chars() {
                 for j in String::from("1").chars() {
@@ -52,25 +52,24 @@ impl epi::App for ExampleApp {
                 } else {
                     self.newsels.push_str("0");
                 }
-
             }
-            
+
             self.oldsels = self.newsels.clone();
             self.newsels = String::from("");
             ui.label(format!("You have selected {} Checkboxes", self.numsel));
         });
-        
     }
 }
 
-fn main() {
-    let app = ExampleApp::default();
-    
-    let native_options = eframe::NativeOptions{
-        initial_window_size: Some(egui::Vec2{x: 400.0, y: 400.0}),
+fn main() -> eframe::Result<()> {
+    let native_options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size((400.0, 400.0)),
         ..eframe::NativeOptions::default()
     };
 
-    eframe::run_native(Box::new(app), native_options);
+    eframe::run_native(
+        ExampleApp::name(),
+        native_options,
+        Box::new(|_| Box::<ExampleApp>::default()),
+    )
 }
-
