@@ -1,9 +1,9 @@
 [package]
-name = "egui-101-moving-circle"
+name = "egui-101-check-box"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.56"
 
 [dependencies]
-eframe = "0.16.0" # Gives us egui, epi and web+native backends
+eframe = "0.24.0" # Gives us egui, epi and web+native backends
 

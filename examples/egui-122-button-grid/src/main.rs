@@ -1,4 +1,3 @@
-use eframe::epi;
 use eframe::egui;
 
 struct ExampleApp {
@@ -6,64 +5,66 @@ struct ExampleApp {
     grid_size: u32,
 }
 
+impl ExampleApp {
+    fn name() -> &'static str {
+        "egui-101-menu"
+    }
+}
+
 impl Default for ExampleApp {
     fn default() -> Self {
-        Self {   
+        Self {
             score: 20,
             grid_size: 3,
-
         }
     }
 }
 
-impl epi::App for ExampleApp {
-    fn name(&self) -> &str {
-        "egui-101-menu"
-    }
-
-    fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
+impl eframe::App for ExampleApp {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         ctx.set_pixels_per_point(1.5);
-        
+
         egui::CentralPanel::default().show(ctx, |ui| {
-            let mut fonts = egui::FontDefinitions::default();
-            fonts.family_and_size.insert(
-                egui::TextStyle::Button,
-                (egui::FontFamily::Proportional, 32.0)
-            );
-            ctx.set_fonts(fonts);
+            ctx.style_mut(|style| {
+                style.text_styles.insert(
+                    egui::TextStyle::Button,
+                    egui::FontId::new(32.0, egui::FontFamily::Proportional),
+                );
+            });
+
             egui::Grid::new("grid").show(ui, |ui| {
                 let mut count = 0;
                 for i in 0..self.grid_size {
                     for j in 0..self.grid_size {
                         count += 1;
                         if count <= 9 {
-                            if ui.button(format!(" 0{} ",count.to_string())).clicked() {
+                            if ui.button(format!(" 0{} ", count.to_string())).clicked() {
                                 self.score += count;
                             }
                         } else {
-                            if ui.button(format!(" {} ",count.to_string())).clicked() {
+                            if ui.button(format!(" {} ", count.to_string())).clicked() {
                                 self.score += count;
                             }
                         }
                     }
                     ui.end_row();
                 }
-                
             });
             ui.label(format!("Score: {}", self.score));
             ui.add(egui::Slider::new(&mut self.grid_size, 2..=10));
-
         });
     }
 }
 
-fn main() {
-    let app = ExampleApp::default();
-    
-    let native_options = eframe::NativeOptions{
-        initial_window_size: Some(egui::Vec2{x: 400.0, y: 400.0}),
+fn main() -> eframe::Result<()> {
+    let native_options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size((400.0, 400.0)),
         ..eframe::NativeOptions::default()
     };
 
-    eframe::run_native(Box::new(app), native_options);
+    eframe::run_native(
+        ExampleApp::name(),
+        native_options,
+        Box::new(|_| Box::<ExampleApp>::default()),
+    )
 }

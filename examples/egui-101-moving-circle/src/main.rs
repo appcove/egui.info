@@ -1,4 +1,3 @@
-use eframe::epi;
 use eframe::egui;
 use egui::Color32;
 use egui::Stroke;
@@ -6,6 +5,12 @@ use egui::Stroke;
 struct ExampleApp {
     cx: f32,
     cy: f32,
+}
+
+impl ExampleApp {
+    fn name() -> &'static str {
+        "egui-101-moving-circle"
+    }
 }
 
 impl Default for ExampleApp {
@@ -17,13 +22,8 @@ impl Default for ExampleApp {
     }
 }
 
-impl epi::App for ExampleApp {
-    fn name(&self) -> &str {
-        "egui-101-moving-circle"
-    }
-
-    fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
-        
+impl eframe::App for ExampleApp {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         // Move the circle position
         self.cy += 0.7;
         self.cx += 0.25;
@@ -33,16 +33,22 @@ impl epi::App for ExampleApp {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             if ui.button("Quit").clicked() {
-                frame.quit()
+                std::process::exit(0);
             };
 
             let painter = ui.painter();
 
             painter.circle(
-                egui::Pos2{x:self.cx,y:self.cy}, 
-                50.0, 
-                Color32::TRANSPARENT, 
-                Stroke{width: 2.0, color: Color32::from_rgb(255, 255, 255)}
+                egui::Pos2 {
+                    x: self.cx,
+                    y: self.cy,
+                },
+                50.0,
+                Color32::TRANSPARENT,
+                Stroke {
+                    width: 2.0,
+                    color: Color32::from_rgb(255, 255, 255),
+                },
             );
         });
 
@@ -51,13 +57,15 @@ impl epi::App for ExampleApp {
     }
 }
 
-fn main() {
-    let app = ExampleApp::default();
-
-    let native_options = eframe::NativeOptions{
-        initial_window_size: Some(egui::Vec2{x: 400.0, y: 400.0}),
+fn main() -> eframe::Result<()> {
+    let native_options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size((400.0, 400.0)),
         ..eframe::NativeOptions::default()
     };
 
-    eframe::run_native(Box::new(app), native_options);
+    eframe::run_native(
+        ExampleApp::name(),
+        native_options,
+        Box::new(|_| Box::<ExampleApp>::default()),
+    )
 }

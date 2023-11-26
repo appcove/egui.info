@@ -17,7 +17,7 @@ This is a simple example with a heading, label, and button
 The `update` function is the workhorse of egui.  It is called up to 60 times per second to render the contents of the UI.
 
 ```rust
-fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
+fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
     ctx.set_pixels_per_point(1.5);
 
     egui::CentralPanel::default().show(ctx, |ui| {
@@ -27,7 +27,7 @@ fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
 
         // This literally creates the button AND checks to see if it was clicked
         if ui.button("Quit").clicked() {
-            frame.quit()
+            std::process::exit(0);
         };
     });
 }
