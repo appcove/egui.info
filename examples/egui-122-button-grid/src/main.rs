@@ -21,7 +21,7 @@ impl Default for ExampleApp {
 }
 
 impl eframe::App for ExampleApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_pixels_per_point(1.5);
 
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -34,8 +34,8 @@ impl eframe::App for ExampleApp {
 
             egui::Grid::new("grid").show(ui, |ui| {
                 let mut count = 0;
-                for i in 0..self.grid_size {
-                    for j in 0..self.grid_size {
+                for _i in 0..self.grid_size {
+                    for _j in 0..self.grid_size {
                         count += 1;
                         if count <= 9 {
                             if ui.button(format!(" 0{} ", count.to_string())).clicked() {

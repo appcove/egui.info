@@ -35,7 +35,6 @@ impl eframe::App for ExampleApp {
             });
         });
         egui::CentralPanel::default().show(ctx, |ui| {
-            let mut fonts = egui::FontDefinitions::default();
             // Large button text:
             if self.selected == 1 {
                 ctx.style_mut(|style| {

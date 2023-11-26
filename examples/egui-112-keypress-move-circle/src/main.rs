@@ -27,7 +27,7 @@ impl Default for ExampleApp {
 }
 
 impl eframe::App for ExampleApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Looks better on 4k montior
         ctx.set_pixels_per_point(1.5);
 
@@ -89,8 +89,6 @@ impl eframe::App for ExampleApp {
 }
 
 fn main() -> eframe::Result<()> {
-    let app = ExampleApp::default();
-
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_inner_size((800.0, 800.0)),
         ..eframe::NativeOptions::default()
