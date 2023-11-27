@@ -18,7 +18,6 @@ cargo build -p egui-101-basic
 cargo run -p egui-101-basic
 ```
 
-
 ## 101: Basic Examples
 
 1. [egui-101-basic](./egui-101-basic): A heading, label, and button.
@@ -47,3 +46,7 @@ cargo run -p egui-101-basic
 1. [egui-144-clicker-game](./egui-144-clicker-game): Gets points for clicks
 1. [egui-144-color-clicker](./egui-144-color-clicker): Four circles that you have to turn off
 1. [egui-144-circle-chaser](./egui-144-circle-chaser/): A circle and a target, Touch the target
+
+## 215: Intermediate Examples
+
+1. [egui-215-todo-list](./egui-215-todo-list/): A multi-window todo list.
