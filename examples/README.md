@@ -30,6 +30,7 @@ cargo run -p egui-101-basic
 1. [egui-112-circle-follow-mouse](./egui-112-circle-follow-mouse): Following the mouse pointer with a circle
 1. [egui-112-button-move-circle](./egui-112-button-move-circle): Buttons that effect a circle on the screen
 1. [egui-112-keypress-move-circle](./egui-112-keypress-move-circle): Moving a circle around the screen using keypresses
+1. [egui-112-keypress-move-circle-with-velocity](./egui-112-keypress-move-circle-with-velocity): Moving a circle around the screen using keypresses to change velocity
 
 ## 122: Basic Widgets
 
