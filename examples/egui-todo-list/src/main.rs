@@ -19,7 +19,7 @@ impl Default for TodoItem {
 struct ExampleApp {
     // The todo items, with a unique u32 identifier
     items: HashMap<u32, TodoItem>,
-    // A counter to keep track of the next valid ID -- it is the only ID that can be added if not alredy present
+    // A counter to keep track of the next valid ID -- it is incremented every time it's used
     next_id: u32,
 
     // the id and item currently edited, if any
