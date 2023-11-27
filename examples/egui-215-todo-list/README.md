@@ -1,11 +1,11 @@
-## egui-todo-list
+## egui-215-todo-list
 
-    This is a simple example of a multi-window todo list.
+    This is an example of a multi-window todo list.
 
 ## Source
 
-- [src/main.rs]({{ site.codeurl }}/examples/egui-todo-list/src/main.rs)
-- [Project Directory]({{ site.codeurl }}/examples/egui-todo-list)
+- [src/main.rs]({{ site.codeurl }}/examples/egui-215-todo-list/src/main.rs)
+- [Project Directory]({{ site.codeurl }}/examples/egui-215-todo-list)
 
 ## Screenshots
 

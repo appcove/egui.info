@@ -28,7 +28,7 @@ struct ExampleApp {
 
 impl ExampleApp {
     fn name() -> &'static str {
-        "egui todo list"
+        "egui 215 todo list"
     }
 }
 
