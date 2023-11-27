@@ -1,5 +1,5 @@
 
-# egui-112-keypress-move-circle
+# egui-112-keypress-move-circle-with-velocity
 
 This is a simple example of keypressing to change the velocity of a circle, causing it to move around the screen.
 
