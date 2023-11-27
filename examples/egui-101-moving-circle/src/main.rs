@@ -23,7 +23,7 @@ impl Default for ExampleApp {
 }
 
 impl eframe::App for ExampleApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Move the circle position
         self.cy += 0.7;
         self.cx += 0.25;

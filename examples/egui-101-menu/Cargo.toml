@@ -8,9 +8,3 @@ rust-version = "1.56"
 eframe = "0.24.0" # Gives us egui, epi and web+native backends
 
 
-[features]
-
-
-[profile.release]
-opt-level = 2 # fast and small wasm
-

@@ -134,7 +134,7 @@ impl ExampleApp {
 }
 
 impl eframe::App for ExampleApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Looks better on 4k montior
         ctx.set_pixels_per_point(1.5);
 

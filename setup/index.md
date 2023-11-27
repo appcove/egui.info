@@ -70,13 +70,12 @@ git clone git@github.com:appcove/egui.info.git
 cd egui.info
 ```
 
-After git is finished cloning the repository, change directories into our example of a simple native Rust application and run cargo.
+After git is finished cloning the repository, run cargo with the example you want to run specified.
 
 Note: Upon running a Rust application for the first time, it can take considerable time to install all dependencies.
 
 ```bash
-cd examples/egui-example-native-basic
-cargo run
+cargo run -p egui-101-basic
 ```
 
 

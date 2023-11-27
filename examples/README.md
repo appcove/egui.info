@@ -9,9 +9,13 @@ Once you have rust installed (see the [setup page](/setup)), here is how to run 
 # Do this once to get the code
 git clone https://github.com/appcove/egui.info.git
 
-# Here is how to run any example
-cd egui.info/examples/egui-101-basic
-cargo build
+# Enter the egui.info directory
+cd egui.info
+
+# Examples can be built with
+cargo build -p egui-101-basic
+# And run with
+cargo run -p egui-101-basic
 ```
 
 
