@@ -22,8 +22,8 @@ struct ExampleApp {
     // A counter to keep track of the next valid ID -- it is incremented every time it's used
     next_id: u32,
 
-    // the id and item currently edited, if any
-    currently_edited: Option<(u32, TodoItem)>,
+    // the currently edited items, they each have their own intermediate state
+    currently_edited: HashMap<u32, TodoItem>,
 }
 
 impl ExampleApp {
@@ -37,7 +37,7 @@ impl Default for ExampleApp {
         Self {
             items: HashMap::new(),
             next_id: 0,
-            currently_edited: None,
+            currently_edited: HashMap::new(),
         }
     }
 }
@@ -67,8 +67,10 @@ impl eframe::App for ExampleApp {
                         .add(egui::Label::new(&item.name).sense(egui::Sense::click()))
                         .clicked()
                     {
-                        // Set this item to be the currently edited one
-                        self.currently_edited = Some((id, item));
+                        // Set this item to be currently edited, if it isn't already
+                        if !self.currently_edited.contains_key(&id) {
+                            self.currently_edited.insert(id, item);
+                        }
                     };
 
                     // Add some spacing to let it breathe
@@ -92,9 +94,15 @@ impl eframe::App for ExampleApp {
                 std::process::exit(0);
             }
 
-            // If we're currently editing an item, we have to keep calling ctx.show_viewport_immediate
-            // Remove the currently edited id and item, replace later if necessary
-            if let Some((id, mut item)) = self.currently_edited.take() {
+            // make a copy of all of the ids being edited so we can still mutate self.currently_edited
+            let keys = self.currently_edited.keys().cloned().collect::<Vec<_>>();
+
+            // If we're currently editing items, we have to keep calling ctx.show_viewport_immediate for every editor window, with its own id
+            for id in keys {
+                // Take out the item we're using so we can mutate it
+                let mut item = self.currently_edited.remove(&id).unwrap();
+
+                // This viewport id has to be unique and persistent across frames
                 let viewport_id = egui::ViewportId::from_hash_of(format!("edit {id}"));
                 let viewport_builder = egui::ViewportBuilder::default()
                     .with_inner_size((300.0, 300.0))
@@ -112,22 +120,22 @@ impl eframe::App for ExampleApp {
                             // Insert our changed item at the id
                             self.items.insert(id, item);
 
-                            // Set the currently edited item to nothing
-                            self.currently_edited = None;
+                            // Remove this item from being edited
+                            self.currently_edited.remove(&id);
                         } else if ui.button("Cancel").clicked()
                             || ctx.input(|i| i.viewport().close_requested())
                         {
-                            // Set the currently edited item to nothing
-                            self.currently_edited = None;
+                            // Remove this item from being edited
+                            self.currently_edited.remove(&id);
                         } else if ui.button("Remove").clicked() {
                             // Remove the currently edited item
                             self.items.remove(&id);
 
-                            // Set the currently edited item to nothing
-                            self.currently_edited = None;
+                            // Remove this item from being edited
+                            self.currently_edited.remove(&id);
                         } else {
-                            // Otherwise set the currently edited item to this item again so the window won't close
-                            self.currently_edited = Some((id, item));
+                            // Otherwise reinsert the item again so the window won't close
+                            self.currently_edited.insert(id, item);
                         }
                     });
                 };
